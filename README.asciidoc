@@ -1,0 +1,32 @@
+This software is in an early stage, but at this time it can program a
+PIC12LF1822 with any .hex file from command line.  It contains also a big
+PICKit2 control framework written in ruby and usb-capture dissassembler toolkit
+for reverse engineering the programming of other chips.  Be a contributor! :D
+
+How to run/test/use
+-------------------
+http://www.ruby-lang.org/en/downloads/[Install Ruby.]
+https://github.com/larskanis/libusb[Install libusb gem.]
+Note the
+http://sourceforge.net/apps/mediawiki/piklab/index.php?title=USB_Port_Problems[usb
+rights issue]..
+
+then put a PIC12LF1822 device into the programmer and type:
+----
+ruby test_programming.rb
+----
+There is a little example in the 'test' directory which writes a 'hello world'
+program into the chip. The only thing that the 'hello world' does is it
+switches the RA2 pin on. You can replace the example hex file with any other
+one.  http://gputils.sourceforge.net/[Gputils] can compile assembly source for
+that f1-series chips.  Feature for other chips can be also implemented. Check
+out the file test/lib/pic14_f1_device_datas.rb Implementing new chips and its'
+parameters is quite simple. Note that LF chips cannot be bulk-erased in LVP
+mode. The programming protocol can be different as well.. There are tech sheets
+in the docs folder. Soon I will continue the coding also but now as it is
+usable, let me have fun with the hardware itself for a while ;)
+
+License 
+------- 
+This project is distributed under http://www.gnu.org/licenses/gpl.html[GPLv3] 
+(C) 2012 MRTEE.GITHUB.COM
