@@ -1,8 +1,7 @@
-*PIC programmer framework for http://en.wikipedia.org/wiki/PICKit[PICKit2],
-especially for programming the f1-series
-http://www.microchip.com/pagehandler/en-us/family/8bit/architecture/enhancedmidrange.html[PIC
-Microcontrollers with Enhanced Mid-Range Core] (eg. PIC12F1822) and possible
-more...*
+_PIC programmer framework for http://en.wikipedia.org/wiki/PICKit[PICKit2],
+especially for programming the f1-series PIC MIcrocontrollers with
+http://www.microchip.com/pagehandler/en-us/family/8bit/architecture/enhancedmidrange.html[Enhanced
+Mid-Range Core] (eg. PIC12F1822) and possible more..._
 
 This software is in an early stage, but at this time it can program a
 PIC12LF1822 with any .hex file from command line.  It contains also a big
@@ -13,7 +12,7 @@ How to run/test/use
 -------------------
 * http://www.ruby-lang.org/en/downloads/[Install Ruby.]
 * https://github.com/larskanis/libusb[Install libusb gem.]
-Note the
+* Note the
 http://sourceforge.net/apps/mediawiki/piklab/index.php?title=USB_Port_Problems[usb
 rights issue]..
 * Connect a PIC12LF1822 device into the programmer and type:
