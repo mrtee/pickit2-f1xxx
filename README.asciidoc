@@ -19,8 +19,12 @@ rights issue]..
 
 ----
 cd test
+
+
+
 ruby test_programming.rb
 ----
+
 There is a little example in the 'test' directory which writes a 'hello world'
 program into the chip. The only thing that the 'hello world' does is it
 switches the RA2 pin on. You can replace the example hex file with any other
