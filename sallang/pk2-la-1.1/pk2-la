@@ -1,0 +1,1651 @@
+#!/usr/bin/env python
+
+# Logic Analyzer and I/O Probe for the Microchip PICkit2 Programmer (v1.1)
+# Copyright (C) 2009, Joseph Jezak <josejx@gentoo.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+### For the logic analyzer
+import usb
+import sys
+from threading import Thread
+
+### For the GUI
+import pygtk
+import pango
+pygtk.require('2.0')
+import gtk
+
+### This makes threads work
+gtk.gdk.threads_init()
+
+###############################################################################
+### Logic Analyzer
+###############################################################################
+### Device IDs
+MICROCHIP_VENDOR_ID     = 0x04D8
+PICKIT2_PRODUCT_ID      = 0x0033
+### Endpoints
+PK2_INT_WRITE		= 0x01
+PK2_INT_READ		= 0x81
+INT_PKT_SZ		= 0x40
+
+### Commands
+PK2_SET_POS		= 0xB9
+PK2_SETUP		= 0xB8
+PK2_READ		= 0xAC
+PK2_PADDING		= 0xAD
+PK2_RUN_SCRIPT		= 0xA6
+PK2_CHECK_VOLTAGE	= 0xA3
+PK2_CHECK_STATUS	= 0xA2
+PK2_SET_VPP		= 0xA1 # Logic Input Level
+PK2_SET_VDD		= 0xA0 # Supply Level
+
+### Scripting Commands (from pk2cmd source, only the used ones are here)
+PK2_SCR_VPP_ON		= 0xFB
+PK2_SCR_VPP_OFF		= 0xFA
+PK2_SCR_VPP_PWM_ON	= 0xF9
+PK2_SCR_MCLR_GND_ON	= 0xF7
+PK2_SCR_MCLR_GND_OFF	= 0xF6
+PK2_SCR_SET_ICSP_PINS	= 0xF3
+PK2_SCR_DELAY_LONG	= 0xE8
+PK2_SCR_ICSP_STATE_BUF 	= 0xDC
+PK2_SCR_SET_AUX		= 0xCF
+PK2_SCR_AUX_BUF		= 0xCE
+
+### Pin Constants for I/O
+PK2_IO_ICSP_1_IN	= 0x02
+PK2_IO_ICSP_1_SET	= 0x08
+PK2_IO_ICSP_2_IN	= 0x01
+PK2_IO_ICSP_2_SET	= 0x04
+PK2_IO_AUX_1_IN		= 0x01
+PK2_IO_AUX_1_SET	= 0x02
+
+### Banks
+PK2_BANK_0		= 0x06
+PK2_BANK_1		= 0x07
+
+### Samples taken
+PK2_SAMPLES		= 1024
+
+### Cursors
+PK2_CURSOR1		= 1
+PK2_CURSOR2		= 2
+PK2_CURSOR_BOTH		= 3
+
+class pk2_la:
+	### Initializes the pickit2 device
+	def __init__(self, unit, gui_ref):
+		self.gui_ref = gui_ref
+		### Find the device
+		device = self.find_device(unit)
+		### Connect to the device
+		self.devhandle = device.open()
+		dev = self.devhandle
+		if dev == 0:
+			sys.stderr.write("Unable to open the PicKit2 USB device!\n")
+			sys.exit(-1)
+		### Claim the interface
+		try:
+			dev.claimInterface(0)
+		except:
+			### Try to detach any other devices using the USB interface
+			try:
+				dev.detachKernelDriver(0)
+			except:
+				sys.stderr.write("Unable to detach existing driver from the PicKit2 USB device!\n")
+				sys.exit(-1)
+			### Now that it's detached, try to claim again	
+			try:
+				dev.claimInterface(0)
+			except:
+				sys.stderr.write("Unable to claim the PicKit2 USB interface!\n")
+				sys.exit(-1)
+
+		###############################################################
+		### Logic Analyzer default values
+		###############################################################
+		### Trigger Enable
+		self.trig_en = 0
+		### Trigger on 1/0
+		self.trig_1 = 0
+		### Trigger on edge (1/0 says which edge)
+		self.trig_edge = 0
+		### Trigger Repetition
+		self.trig_repetition = 1
+		### Trigger Window
+		self.trig_win = "Start"
+		### Sample Rate
+		self.set_rate("1MHz")
+		### Returned channel data for the last run
+		self.channel_data = [[], [], []]
+		### Microseconds per tick of the analyzer
+		self.us_per_tick = 1
+		
+		###############################################################
+		### I/O Probe default values
+		###############################################################
+		### I/O State
+		self.chan_io = [ "Output", "Input", "Input", "Input" ]
+		self.chan_val = [ 0, 0, 0, 0 ]
+		self.io_running = False
+		self.io_thread = None
+		self.last_chan_val = [ -1, -1, -1, -1]
+		self.last_chan_io = self.chan_io
+
+	###############################################################
+	### Functions for both components 
+	###############################################################
+	### Unit is the device matched that we want to use
+	def find_device(self, unit):
+		devices = []
+		### Find the PicKit devices plugged in right now
+		for bus in usb.busses() :
+			for device in bus.devices :
+				if device.idVendor == MICROCHIP_VENDOR_ID and device.idProduct == PICKIT2_PRODUCT_ID:
+					devices.append(device)
+
+		### Make sure we have at least one!
+		if len(devices) < 1:
+			sys.stderr.write("No PicKit2 USB device found!\n")
+			sys.exit(-1)
+		else:
+			return devices[unit]
+
+	### Get the VDD and VPP levels
+	def check_voltages(self):
+		done = False
+		try:
+			### Send the command
+			msg = chr(PK2_CHECK_VOLTAGE) + chr(PK2_PADDING) * 63
+			self.devhandle.interruptWrite(PK2_INT_WRITE, msg)
+		except:
+			pass
+	
+		while not done:
+			try:
+				ret = self.devhandle.interruptRead(PK2_INT_READ, INT_PKT_SZ)
+			### We ignore failures here because we're just polling for
+			### the return from the device
+			except:
+				pass
+			else:
+				done = True
+
+		### This equation is from the pk2cmd program from microchip
+		vdd = (float(ret[1] << 8 | ret[0]) / 0x10000) * 5.0
+		vpp = (float(ret[3] << 8 | ret[2]) / 0x10000) * 13.7
+		return vdd, vpp
+
+	### Set the vpp voltage level
+	### This function is based on one from pk2cmd
+	def set_vpp(self, voltage, threshold):
+		### Message Header
+		msg = chr(PK2_SET_VPP) + chr(0x40)
+		### Find ADC threshold
+		adc = int(float(voltage) * 18.61)
+		### Find Fault threshold
+		fault = int(float(voltage * threshold) * 18.61)
+
+		### Send the msg to the device
+		try:
+			msg = msg + chr(adc) + chr(fault) + chr(PK2_PADDING) * 60
+			self.devhandle.interruptWrite(PK2_INT_WRITE, msg)
+		except:
+			pass
+	
+	### Set the vdd voltage level
+	### This function is based on one from pk2cmd
+	def set_vdd(self, voltage, threshold):
+		### Voltage must be >= 2.5, setting too low prevents vpp pump from working
+		if voltage < 2.5:
+			voltage = 2.5
+		### Find the capture and compare value
+		ccp = int(float(voltage * 32) + 10.5) << 6
+		### Find the fault value
+		fault = int((float(threshold * voltage) / 5) * 255)
+		### ~4.12v maximum due to diode droop
+		if fault > 210:
+			fault = 210
+
+		### Message Header
+		msg = chr(PK2_SET_VDD)
+		### Send the msg to the device
+		try:
+			msg = msg + chr(ccp & 0xFF) + chr((ccp >> 8) & 0xFF) + chr(fault & 0xFF) + chr(PK2_PADDING) * 60
+			self.devhandle.interruptWrite(PK2_INT_WRITE, msg)
+		except:
+			pass
+	
+	### Checks the status of the device, a list of the possible responses
+	### can be found in the IO Probe text file
+	def check_status(self):
+		### Check the device status
+		msg = chr(PK2_CHECK_STATUS) + chr(PK2_PADDING) * 63
+		try:
+			### Send status msg
+			self.devhandle.interruptWrite(PK2_INT_WRITE, msg)
+		except:
+			pass
+
+		### Get status back
+		done = False
+		while not done:
+			try:
+				ret = self.devhandle.interruptRead(PK2_INT_READ, INT_PKT_SZ)
+			### We ignore failures here because we're just polling for
+			### the return from the device
+			except:
+				pass
+			else:
+				done = True
+
+		return (ret[1] << 8) | ret[0]
+		
+	#######################################################################
+	### I/O Probe Components
+	#######################################################################
+	### Generate the byte used to set the ICSP Pins
+	def gen_icsp_byte(self):
+		icsp_pins = 0
+
+		### Channel 1
+		if self.chan_io[1] == "Input":
+			icsp_pins = icsp_pins | PK2_IO_ICSP_1_IN
+		elif self.chan_val[1] == 1:
+			icsp_pins = icsp_pins | PK2_IO_ICSP_1_SET
+		
+		### Channel 2
+		if self.chan_io[2] == "Input":
+			icsp_pins = icsp_pins | PK2_IO_ICSP_2_IN
+		elif self.chan_val[2] == 1:
+			icsp_pins = icsp_pins | PK2_IO_ICSP_2_SET
+
+		return icsp_pins
+	
+	### Generate the byte used to set the AUX Pins
+	def gen_aux_byte(self):
+		aux_pins = 0
+
+		### Aux pin
+		if self.chan_io[3] == "Input":
+			aux_pins = aux_pins | PK2_IO_AUX_1_IN
+		elif self.chan_val[3] == 1:
+			aux_pins = aux_pins | PK2_IO_AUX_1_SET
+		return aux_pins
+
+	### Setup the I/O Module
+	def io_setup(self):
+		msg = chr(PK2_RUN_SCRIPT)
+		### 9 Commands in this script
+		msg = msg + chr(0x09)
+		### Set Ch. 0 to 0/1
+		if self.chan_val[0] == 0:
+			msg = msg + chr(PK2_SCR_VPP_OFF)
+			msg = msg + chr(PK2_SCR_MCLR_GND_ON)
+		else:
+			msg = msg + chr(PK2_SCR_VPP_ON)
+			msg = msg + chr(PK2_SCR_MCLR_GND_OFF)
+		### Turn on VPP PWM
+		msg = msg + chr(PK2_SCR_VPP_PWM_ON)
+		### Set ICSP Pins
+		msg = msg + chr(PK2_SCR_SET_ICSP_PINS) + chr(self.gen_icsp_byte())
+		### Set AUX Pins
+		msg = msg + chr(PK2_SCR_SET_AUX) + chr(self.gen_aux_byte())
+		### Delay
+		msg = msg + chr(PK2_SCR_DELAY_LONG) + chr(0x14)
+		### Padding
+		msg = msg + chr(PK2_PADDING) * 53
+		
+		### Send the msg to the device
+		try:
+			self.devhandle.interruptWrite(PK2_INT_WRITE, msg)
+		except:
+			pass
+
+		### Check device status
+		### FIXME What are we checking here?
+		self.check_status()
+
+	### Sets the pins direction and value
+	def io_setup_pins(self):
+		msg = chr(PK2_RUN_SCRIPT)
+		### 6 Commands in this script
+		msg = msg + chr (0x06)
+		### Set Ch. 0 to 0/1
+		if self.chan_val[0] == 0:
+			msg = msg + chr(PK2_SCR_VPP_OFF)
+			msg = msg + chr(PK2_SCR_MCLR_GND_ON)
+		else:
+			msg = msg + chr(PK2_SCR_VPP_ON)
+			msg = msg + chr(PK2_SCR_MCLR_GND_OFF)
+		### Set ICSP Pins
+		msg = msg + chr(PK2_SCR_SET_ICSP_PINS) + chr(self.gen_icsp_byte())
+		### Set AUX Pins
+		msg = msg + chr(PK2_SCR_SET_AUX) + chr(self.gen_aux_byte())
+		### Padding
+		msg = msg + chr(PK2_PADDING) * 56
+
+		### Send the msg to the device
+		try:
+			self.devhandle.interruptWrite(PK2_INT_WRITE, msg)
+		except:
+			pass
+
+		### Save the local copy of the pin value and io state
+		self.last_chan_val = self.chan_val[:]
+		self.last_chan_io = self.chan_io[:]
+
+		### Check device status
+		### FIXME What are we checking here?
+		self.check_status()
+
+	### Requests an I/O report
+	def io_request_pins(self):
+		### Send the data request	
+		msg = chr(PK2_RUN_SCRIPT)
+		### 2 Instructions
+		msg = msg + chr(0x02)
+		### Request the state buffer? 
+		msg = msg + chr(PK2_SCR_ICSP_STATE_BUF)
+		### Request the aux state buffer?
+		msg = msg + chr(PK2_SCR_AUX_BUF)
+		### Unknown
+		msg = msg + chr(0xAA)
+		### Padding
+		msg = msg + chr(PK2_PADDING) * 59
+
+		### Send the msg to the device
+		try:
+			self.devhandle.interruptWrite(PK2_INT_WRITE, msg)
+		except:
+			pass
+
+		done = False
+		### Get response
+		while not done:
+			try:
+				ret = self.devhandle.interruptRead(PK2_INT_READ, INT_PKT_SZ)
+			### We ignore failures here because we're just polling for
+			### the return from the device
+			except:
+				pass
+			else:
+				done = True
+		return ret
+		
+	### Run the I/O Module
+	def run_io(self):
+		### Check to make sure we have a voltage on the device
+		vdd, vpp = self.check_voltages()
+		### If the input voltage is < 2.5v, it won't work
+		if vdd < 2.5: 
+			err = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, "You must connect VDD (pin 2) to a source between 2.5v and 5.0v")
+			err.set_title("Check Source Voltage")
+			err.run()
+			err.destroy()
+			return False
+
+		### These values were determined by doing the reverse of the
+		### equations in these functions using the captured data
+		### Set VPP
+		self.set_vpp(vdd, 0.7)
+		### Set VDD
+		self.set_vdd(vdd, 0.85)
+		
+		### Setup the IO Module
+		self.io_setup()
+				
+		### Start the io thread running			
+		self.io_running = True
+
+		### Start the thread
+		self.io_thread = io_thread(self)
+		self.io_thread.start()
+		return True
+	
+	#######################################################################
+	### Logic Analyzer Components
+	#######################################################################
+	
+	### Wait for a trigger and retrieve data
+	def la_acquire(self):
+		### Get the data
+		pk2_data = []
+		if self.la_setup_trigger():
+			### Read from the banks
+			pk2_data.append(self.read_bank(PK2_BANK_0, 0x00))
+			pk2_data.append(self.read_bank(PK2_BANK_0, 0x80))
+			pk2_data.append(self.read_bank(PK2_BANK_1, 0x00))
+			pk2_data.append(self.read_bank(PK2_BANK_1, 0x80))
+
+			### Convert the input to channel data
+			self.channel_data = self.la_raw_to_data(pk2_data)
+			return True
+		else:
+			return False
+
+	### Takes the raw data banks and converts to a tuple of bits for each channel
+	def la_raw_to_data(self, bank_data):
+		channel_data = [[], [], []]
+		### Loop over the banks
+		for i in range(0, 4):
+			for j in bank_data[i]:
+				for k in j:
+					### Channel 1
+					if k & (1 << 6):
+						channel_data[0].append("1")
+					else:
+						channel_data[0].append("0")
+					if k & (1 << 2):
+						channel_data[0].append("1")
+					else:
+						channel_data[0].append("0")
+						
+					### Channel 2
+					if k & (1 << 7):
+						channel_data[1].append("1")
+					else:
+						channel_data[1].append("0")
+					if k & (1 << 3):
+						channel_data[1].append("1")
+					else:
+						channel_data[1].append("0")
+	
+					### Channel 3
+					if k & (1 << 4):
+						channel_data[2].append("1")
+					else:
+						channel_data[2].append("0")
+					if k & (1 << 0):
+						channel_data[2].append("1")
+					else:
+						channel_data[2].append("0")
+					
+		return channel_data
+
+
+	### Write a setup pkt to the device
+	def la_setup_trigger(self):
+		### Quick check, make sure things are sane
+		if not self.la_setup_valid():
+			print "The setup is not valid - please set a trigger"
+			return False
+			
+		### Create the setup packet to send to the device
+		msg = self.la_setup_pkt()
+		### FIXME better error checking
+		try:
+			### Send the setup packet
+			self.devhandle.interruptWrite(PK2_INT_WRITE, msg)
+		except:
+			pass
+
+		### Wait for the data or cancelation report
+		done = False
+		ret = 0
+		while not done:
+			try:
+				ret = self.devhandle.interruptRead(PK2_INT_READ, INT_PKT_SZ)
+			### We ignore failures here because we're just polling for
+			### the return from when the trigger occurs
+			except:
+				pass
+			else:
+				done = True
+
+		### User pressed cancel
+		if ret[0] == 0x04 and ret[1] == 0x40:
+			print "The user pressed cancel"
+			return False
+		
+		print "Trigger Hit: Aquiring Data"
+		return True
+
+	### Read bank from trigger data
+	def read_bank(self, bank, offset):
+		bank_data = []
+		try:
+			### Set the position
+			msg = chr(PK2_SET_POS) + chr(offset) + chr(bank) + chr(PK2_PADDING) * 61
+			self.devhandle.interruptWrite(PK2_INT_WRITE, msg)
+
+			### We read 0x40 bytes out at a time, the bank is 0x80 long
+			### I'm not sure if this is just a peculiarity of the software, or a real
+			### limitation of the device, but this works for now
+			for i in range(0, 2):
+				### Now request the next bank read
+				msg = chr(PK2_READ) + chr(PK2_PADDING) * 63
+				self.devhandle.interruptWrite(PK2_INT_WRITE, msg)
+			
+				### Okay, now get the data
+				done = False
+				while not done:
+					resp = "No Data"
+					try:
+						resp = self.devhandle.interruptRead(PK2_INT_READ, INT_PKT_SZ)
+					### We ignore failures here because we're just polling for
+					### the return from when the trigger occurs
+					except:
+						pass
+					else:
+						done = True
+						bank_data.append(resp)
+
+		except:
+			pass
+			raise
+
+		return bank_data
+
+	### Make sure that the settings are valid for an acquisition
+	def la_setup_valid(self):
+		### Make sure that at least one channel is enabled
+		if self.trig_en == 0:
+			return False
+		return True
+
+	### Make a setup packet to send to the device
+	### Settings are taken from the values stored in this object
+	def la_setup_pkt(self):
+		### Packet Header
+		msg = chr(PK2_SETUP) + chr(1)
+
+		### Enable bits
+		msg = msg + chr(self.trig_en)
+
+		### Trigger on 1/0
+		msg = msg + chr(self.trig_1)
+
+		### Trigger on edge (1/0 previously set which edge)
+		msg = msg + chr(self.trig_edge)
+
+		### Sample Repetition
+		msg = msg + chr(self.trig_repetition)
+
+		### Trigger Window
+		if self.trig_win == "Center":
+			msg = msg + chr(0x0A) + chr(0x00)
+		elif self.trig_win == "End":
+			msg = msg + chr(0x48) + chr(0x02)
+		elif self.trig_win == "Start":
+			msg = msg + chr(0xCC) + chr(0x3)
+		elif self.trig_win == "1 Window":
+			msg = msg + chr(0xB4) + chr(0x07)
+		elif self.trig_win == "2 Window":
+			msg = msg + chr(0x9C) + chr(0x0B)
+		elif self.trig_win == "3 Window":
+			msg = msg + chr(0x84) + chr(0x0F)
+
+		### Sample Rate
+		msg = msg + chr(self.rate)
+
+		### Padding to 64 bytes
+		msg = msg + chr(PK2_PADDING) * 55
+
+		return msg
+
+	### Set the internal rate to the constants listed here
+	def set_rate(self, rate):
+		if rate == "1MHz":
+			self.rate = 0x00
+			self.us_per_tick = 1
+		elif rate == "500kHz":
+			self.rate = 0x01
+			self.us_per_tick = 2
+		elif rate == "250kHz":
+			self.rate = 0x03
+			self.us_per_tick = 4
+		elif rate == "100kHz":
+			self.rate = 0x09
+			self.us_per_tick = 10
+		elif rate == "50kHz":
+			self.rate = 0x13
+			self.us_per_tick = 20
+		elif rate == "25kHz":
+			self.rate = 0x27
+			self.us_per_tick = 40
+		elif rate == "10kHz":
+			self.rate = 0x63
+			self.us_per_tick = 100
+		elif rate == "5kHz":
+			self.rate = 0xC7
+			self.us_per_tick = 200
+		else:
+			sys.stder.write("Unsupported rate: " + rate)
+			sys.exit(-1)
+		return 0
+
+	### Set the trigger window position
+	def set_trig_win(self, trig_win):
+		self.trig_win = trig_win
+
+	### Set the # of repetitions
+	def set_sample_repetition(self, reps):
+		self.trig_repetition = reps
+
+	### Set the trigger type
+	def set_trig_type(self, trigger, channel):
+		trig_const = 1 << (channel + 1)
+		### Don't care
+		if trigger == "*":
+			self.trig_en = self.trig_en & ~(trig_const)
+			self.trig_1 = self.trig_1 & ~(trig_const)
+			self.trig_edge = self.trig_edge & ~(trig_const)
+
+		### 1
+		elif trigger == "1":
+			self.trig_en = self.trig_en | trig_const
+			self.trig_1 = self.trig_1 | trig_const
+			self.trig_edge = self.trig_edge & ~(trig_const)
+
+		### 0
+		elif trigger == "0":
+			self.trig_en = self.trig_en | trig_const
+			self.trig_1 = self.trig_1 & ~(trig_const)
+			self.trig_edge = self.trig_edge & ~(trig_const)
+
+		### Rising Edge
+		elif trigger == "/":
+			self.trig_en = self.trig_en | trig_const
+			self.trig_1 = self.trig_1 | trig_const
+			self.trig_edge = self.trig_edge | trig_const
+
+		### Falling Edge
+		elif trigger == "\\":
+			self.trig_en = self.trig_en | trig_const
+			self.trig_1 = self.trig_1 & ~(trig_const)
+			self.trig_edge = self.trig_edge | trig_const
+	
+	### Returns the selected channel data
+	def get_la_data(self, chan):
+		return self.channel_data[chan - 1]
+	
+	### Writes data to a file
+	def write_la_data(self, filename):
+		### Open the file
+		df = open(filename, "w") 
+
+		### Write out the data
+		for i in range(1,4):
+			df.write("Channel: " + `i` + "\n")
+			for bit in self.channel_data[i - 1]:
+				df.write(bit)
+			df.write("\n\n")
+
+		### Close the file
+		df.close()
+	
+	def __del__(self):
+		try:
+			self.__devhandle.releaseInterface(self.__intf)
+			del self.__devhandle
+		except:	
+			pass
+
+###############################################################################
+### Thread for running the I/O Module
+###############################################################################
+class io_thread(Thread):
+	def __init__(self, pk2):
+		Thread.__init__(self)
+		self.pk2 = pk2
+
+	### Runs the loop that sets and releases the pins
+	def run(self):
+		while self.pk2.io_running:
+			### If we need to update the pins, do it now
+			if not (self.pk2.last_chan_val == self.pk2.chan_val) or not (self.pk2.last_chan_io == self.pk2.chan_io):
+				### Update the buttons as well
+				gtk.gdk.threads_enter()
+				self.pk2.gui_ref.ioFrame.update_btns()
+				gtk.gdk.threads_leave()
+				self.pk2.io_setup_pins()
+
+			### Request the next report
+			ret = self.pk2.io_request_pins()
+
+			#print ret[0], ret[1], ret[2], ret[3]
+			if self.pk2.chan_io[1] == "Input":
+				self.pk2.chan_val[1] = ret[1] & 0x02
+			if self.pk2.chan_io[2] == "Input":
+				self.pk2.chan_val[2] = ret[1] & 0x01
+			if self.pk2.chan_io[3] == "Input":
+				self.pk2.chan_val[3] = ret[2] & 0x01
+
+			### Check device status
+			### FIXME What are we checking here?
+			self.pk2.check_status()
+
+###############################################################################
+### GUI
+###############################################################################
+class pk2_triggerFrame:
+	def __init__(self, parent, pk2):
+		self.parent = parent
+		### Logic Analyzer Reference
+		self.pk2 = pk2
+
+		self.frame = gtk.Frame("Triggers")
+		box = gtk.VBox(False, 0)
+
+		### Trigger 1
+		box1 = gtk.HBox(False, 0)
+		chan1_label = gtk.Label("Ch 1:")
+		box1.pack_start(chan1_label, True, False, 0)
+		self.chan1 = gtk.combo_box_new_text()
+		self.chan1.append_text("* - Don't Care")
+		self.chan1.append_text("1 - Logic High")
+		self.chan1.append_text("0 - Logic Low")
+		self.chan1.append_text("/ - Rising Edge")
+		self.chan1.append_text("\ - Falling Edge")
+		self.chan1.set_active(0)
+		self.chan1.connect('changed', self.update_trigger, 1)
+		box1.pack_start(self.chan1, True, False, 0)
+		box.pack_start(box1, True, False, 0)
+
+		### Trigger 2
+		box2 = gtk.HBox(False, 0)
+		chan2_label = gtk.Label("Ch 2:")
+		box2.pack_start(chan2_label, True, False, 0)
+		self.chan2 = gtk.combo_box_new_text()
+		self.chan2.append_text("* - Don't Care")
+		self.chan2.append_text("1 - Logic High")
+		self.chan2.append_text("0 - Logic Low")
+		self.chan2.append_text("/ - Rising Edge")
+		self.chan2.append_text("\ - Falling Edge")
+		self.chan2.set_active(0)
+		self.chan2.connect('changed', self.update_trigger, 2)
+		box2.pack_start(self.chan2, True, False, 0)
+		box.pack_start(box2, True, False, 0)
+
+		### Trigger 3
+		box3 = gtk.HBox(False, 0)
+		chan3_label = gtk.Label("Ch 3:")
+		box3.pack_start(chan3_label, True, False, 0)
+		self.chan3 = gtk.combo_box_new_text()
+		self.chan3.append_text("* - Don't Care")
+		self.chan3.append_text("1 - Logic High")
+		self.chan3.append_text("0 - Logic Low")
+		self.chan3.append_text("/ - Rising Edge")
+		self.chan3.append_text("\ - Falling Edge")
+		self.chan3.set_active(0)
+		self.chan3.connect('changed', self.update_trigger, 3)
+		box3.pack_start(self.chan3, True, False, 0)
+		box.pack_start(box3, True, False, 0)
+
+		### Number of occurrences
+		box4 = gtk.HBox(False, 0)
+		occur_label = gtk.Label("# of Times before Trigger: ")
+		box4.pack_start(occur_label, True, False, 0)
+		self.occur_adj = gtk.Adjustment(1, 1, 255, 1, 0, 0)
+		self.occur = gtk.SpinButton(self.occur_adj, 0.0, 0)
+		self.occur.set_numeric(True)
+		self.occur.connect('changed', self.update_repetition)
+		box4.pack_start(self.occur, True, False, 0)
+		box.pack_start(box4, True, False, 0)
+
+		### Display the frame
+		self.frame.add(box)
+
+	def get(self):
+		return self.frame
+
+	def update_repetition(self, adjustment):
+		self.pk2.set_sample_repetition(adjustment.get_value())
+
+	def update_trigger(self, combobox, channel):
+		pk2 = self.pk2
+		
+		index = combobox.get_active()
+		if index == 0:
+			pk2.set_trig_type("*", channel)
+		if index == 1:
+			pk2.set_trig_type("1", channel)
+		if index == 2:
+			pk2.set_trig_type("0", channel)
+		if index == 3:
+			pk2.set_trig_type("/", channel)
+		if index == 4:
+			pk2.set_trig_type("\\", channel)
+
+class pk2_rxFrame:
+	def __init__(self, parent, pk2):
+		self.parent = parent
+		### Logic Analyzer Reference
+		self.pk2 = pk2
+
+		self.frame = gtk.Frame("Acquisition")
+		box = gtk.VBox(False, 0)
+
+		### Bold
+		bold = pango.AttrList()
+		bold.insert(pango.AttrWeight(pango.WEIGHT_HEAVY, 0, -1))
+		### Italic
+		italic = pango.AttrList()
+		italic.insert(pango.AttrStyle(pango.STYLE_ITALIC, 0, -1))
+
+		### Sample Rate
+		sample_box = gtk.HBox(False, 0)
+		rate_label = gtk.Label("Sample Rate:")
+		rate_label.set_property("attributes", bold)
+		sample_box.pack_start(rate_label, True, False, 0)
+
+		### Sample Rate drop down
+		self.rate = gtk.combo_box_new_text()
+		self.rate.append_text("1MHz - 1 ms Window")
+		self.rate.append_text("500kHz - 2ms Window")
+		self.rate.append_text("250kHz - 4ms Window")
+		self.rate.append_text("100kHz - 10ms Window")
+		self.rate.append_text("50kHz - 20ms Window")
+		self.rate.append_text("25kHz - 40ms Window")
+		self.rate.append_text("10kHz - 100ms Window")
+		self.rate.append_text("5kHz - 200ms Window")
+		self.rate.set_active(0)
+		sample_box.pack_start(self.rate, True, False, 0)
+		box.pack_start(sample_box, True, False, 0)
+		### Add a callback so the sample rate can change the aliasing warning
+		self.rate.connect('changed', self.update_rate)
+
+		### Add a label for the Aliasing warning
+		self.note_label = gtk.Label("Signals > 500kHz will alias")
+		self.note_label.set_property("attributes", italic)
+		box.pack_start(self.note_label, True, False, 0)
+
+		### Trigger Position
+		trigger_box = gtk.HBox(False, 0)
+		trig_label = gtk.Label("Trigger Position:")
+		trig_label.set_property("attributes", bold)
+		trigger_box.pack_start(trig_label, True, False, 0)
+
+		### Trigger Position drop down
+		self.trig_pos = gtk.combo_box_new_text()
+		self.trig_pos.append_text("Start of Data")
+		self.trig_pos.append_text("Center of Data")
+		self.trig_pos.append_text("End of Data")
+		self.trig_pos.append_text("Delay 1 Window")
+		self.trig_pos.append_text("Delay 2 Windows")
+		self.trig_pos.append_text("Delay 3 Windows")
+		self.trig_pos.set_active(0)
+		trigger_box.pack_start(self.trig_pos, True, False, 0)
+		self.trig_pos.connect('changed', self.update_trig_pos)
+		box.pack_start(trigger_box, True, False, 0)
+
+		### Display the frame
+		self.frame.add(box)
+
+	def update_trig_pos(self, combobox):
+		pk2 = self.pk2
+		index = self.trig_pos.get_active()
+		if index == 0:
+			pk2.set_trig_win("Start")
+		elif index == 1:
+			pk2.set_trig_win("Center")
+		elif index == 2:
+			pk2.set_trig_win("End")
+		elif index == 3:
+			pk2.set_trig_win("1 Window")
+		elif index == 4:
+			pk2.set_trig_win("2 Window")
+		elif index == 5:
+			pk2.set_trig_win("3 Window")
+
+	def update_rate(self, combobox):
+		pk2 = self.pk2
+		### Figure out which one was picked
+		index = self.rate.get_active()
+		if index == 0:
+			self.note_label.set_text("Signals > 500kHz will alias")
+			pk2.set_rate("1MHz");	
+		elif index == 1:
+			self.note_label.set_text("Signals > 250kHz will alias")
+			pk2.set_rate("500kHz");	
+		elif index == 2:
+			self.note_label.set_text("Signals > 125kHz will alias")
+			pk2.set_rate("250kHz");	
+		elif index == 3:
+			self.note_label.set_text("Signals > 50kHz will alias")
+			pk2.set_rate("100kHz");	
+		elif index == 4:
+			self.note_label.set_text("Signals > 25kHz will alias")
+			pk2.set_rate("50kHz");	
+		elif index == 5:
+			self.note_label.set_text("Signals > 12.5kHz will alias")
+			pk2.set_rate("25kHz");	
+		elif index == 6:
+			self.note_label.set_text("Signals > 5kHz will alias")
+			pk2.set_rate("10kHz");	
+		elif index == 7:
+			self.note_label.set_text("Signals > 2.5kHz will alias")
+			pk2.set_rate("5kHz");	
+		### Set the value per tick message
+		self.parent.la_display.la_ticks_label.set_text(`pk2.us_per_tick` + "us/tick")
+		### Disable cursors on all of the boxes	
+		self.parent.la_display.clear_cursors()
+		### Force a redraw
+		self.parent.window.queue_draw()
+
+	def get(self):
+		return self.frame
+
+class pk2_la_display:
+	def __init__(self, parent, pk2):
+		self.parent = parent
+
+		### Logic Analyzer Reference
+		self.pk2 = pk2
+
+		### Italic
+		italic = pango.AttrList()
+		italic.insert(pango.AttrStyle(pango.STYLE_ITALIC, 0, -1))
+
+		### Display window frame
+		frame = gtk.VBox(False, 0)
+		self.frame = frame
+		
+		### Add the information box
+		infobox = gtk.HBox(False, 0)
+		frame.pack_start(infobox, True, False, 0)
+
+		### Add the legend text
+		self.la_ticks_label = gtk.Label(`pk2.us_per_tick` + "us/tick")
+		self.la_ticks_label.set_property("attributes", italic)
+		infobox.pack_start(self.la_ticks_label, True, False, 0)
+
+		### Add Cursor 1
+		self.la_cur1_label = gtk.Label("Cursor 1: None")
+		s = self.la_cur1_label.get_style().copy()
+		cmap = self.la_cur1_label.get_colormap()
+		s.fg[gtk.STATE_NORMAL] = cmap.alloc_color("red")
+		self.la_cur1_label.set_style(s)
+		infobox.pack_start(self.la_cur1_label, True, False, 0)
+		
+		### Add Cursor 2
+		self.la_cur2_label = gtk.Label("Cursor 2: None")
+		s = self.la_cur2_label.get_style().copy()
+		cmap = self.la_cur2_label.get_colormap()
+		s.fg[gtk.STATE_NORMAL] = cmap.alloc_color("blue")
+		self.la_cur2_label.set_style(s)
+		infobox.pack_start(self.la_cur2_label, True, False, 0)
+		
+		### Add the difference between cursor 1 and 2
+		self.la_cur_diff_label = gtk.Label("Distance: N/A")
+		infobox.pack_start(self.la_cur_diff_label, True, False, 0)
+
+		### Display window for the channel displays
+		dispbox = gtk.HBox(False, 0)
+		chlbl_box = gtk.VBox(False, 0)
+		dispbox.pack_start(chlbl_box, False, False, 0)
+		frame.pack_start(dispbox, True, False, 0)
+
+		### Channel Labels
+		ch1_lbl = gtk.Label("Ch 1: ")
+		chlbl_box.pack_start(ch1_lbl, True, False, 0)
+		ch2_lbl = gtk.Label("Ch 2: ")
+		chlbl_box.pack_start(ch2_lbl, True, False, 0)
+		ch3_lbl = gtk.Label("Ch 3: ")
+		chlbl_box.pack_start(ch3_lbl, True, False, 0)
+
+		### Now, the scrollable window for the channel display
+		dispwin = gtk.ScrolledWindow()
+		self.dispwin = dispwin
+		dispwin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_NEVER)
+		chbox = gtk.VBox(False, 0)
+		dispwin.add_with_viewport(chbox)
+		dispbox.pack_start(dispwin, True, True, 0)
+
+		### Channel 1
+		self.chan1 = pk2_la_drawbox(pk2, 1)
+		self.chan1.set_size_request(self.chan1.wave_len * PK2_SAMPLES / 2, 50)
+		self.chan1.connect('button-press-event', self.clicked)
+		self.chan1.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+		chbox.pack_start(self.chan1, True, True, 0)
+
+		### Channel 2
+		self.chan2 = pk2_la_drawbox(pk2, 2)
+		self.chan2.set_size_request(self.chan2.wave_len * PK2_SAMPLES / 2, 50)
+		self.chan2.connect('button-press-event', self.clicked)
+		self.chan2.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+		chbox.pack_start(self.chan2, True, True, 0)
+
+		### Channel 3
+		self.chan3 = pk2_la_drawbox(pk2, 3)
+		self.chan3.set_size_request(self.chan3.wave_len * PK2_SAMPLES / 2, 50)
+		self.chan3.connect('button-press-event', self.clicked)
+		self.chan3.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+		chbox.pack_start(self.chan3, True, True, 0)
+		
+		### Add the controls
+		ctrlbox = gtk.VBox(False, 0)
+		dispbox.pack_start(ctrlbox, False, False, 0)
+
+		### Add the save buttons
+		gfx_save_button = gtk.Button("Save Visible")
+		gfx_save_button.connect("clicked", self.gfx_save)
+		ctrlbox.pack_start(gfx_save_button, True, True, 0)
+		data_save_button = gtk.Button("Save Data")
+		data_save_button.connect("clicked", self.data_save)
+		ctrlbox.pack_start(data_save_button, True, True, 0)
+
+		### Add the zoom label
+		zoom_lbl = gtk.Label("Zoom:")
+		ctrlbox.pack_start(zoom_lbl, True, False, 0)
+
+		### Add the zoom controls
+		self.zoom = gtk.combo_box_new_text()
+		self.zoom.append_text("0.25x")
+		self.zoom.append_text("0.5x")
+		self.zoom.append_text("1.0x")
+		self.zoom.append_text("2.0x")
+		self.zoom.append_text("5.0x")
+		self.zoom.set_active(2)
+		self.zoom.connect('changed', self.update_zoom)
+		ctrlbox.pack_start(self.zoom, True, False, 0)
+
+	### Open a save dialog for the gfx version
+	def gfx_save(self, widget):
+		### Allocate the pixbuf for the image
+		x,y,width,height = self.dispwin.get_allocation()
+		pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, 0, 8, width - x, 150)
+		chooser = gtk.FileChooserDialog(title="Save image of acquired data as...",action=gtk.FILE_CHOOSER_ACTION_SAVE, buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+		pixbuf.get_from_drawable(self.dispwin.get_window(), self.dispwin.get_colormap(), x, y, 0, 0, width - x, 150)
+		chooser.run()
+		pixbuf.save(chooser.get_filename(), "png")
+		chooser.destroy()
+
+	### Open a save dialog for the txt version
+	def data_save(self, widget):
+		chooser = gtk.FileChooserDialog(title="Save acquired data as...",action=gtk.FILE_CHOOSER_ACTION_SAVE, buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+		chooser.run()
+		self.pk2.write_la_data(chooser.get_filename())
+		chooser.destroy()
+
+	### Place or clear a cursor when a mouse button is clicked on the drawing area
+	def clicked(self, widget, event):
+		pk2 = self.pk2
+		### Move cursor 1 or 2
+		if event.button == 1 or event.button == 2:	
+			### Enable the cursor on all of the boxes	
+			self.chan1.set_cursor(event.button, True)
+			self.chan2.set_cursor(event.button, True)
+			self.chan3.set_cursor(event.button, True)
+			
+			if event.button == 1:
+				### Assign the cursor location to all of the boxes
+				if (event.x % self.chan1.wave_len) > self.chan1.wave_len / 2:
+					self.chan1.cursor1 = int(event.x / self.chan1.wave_len) + 1
+				else:
+					self.chan1.cursor1 = int(event.x / self.chan1.wave_len)
+
+				self.chan2.cursor1 = self.chan1.cursor1
+				self.chan3.cursor1 = self.chan1.cursor1
+
+				### Update the location label
+				loc = pk2.us_per_tick * self.chan1.cursor1
+				self.la_cur1_label.set_text("Cursor 1: " + `loc` + "us")
+
+			else:
+				### Assign the cursor location to all of the boxes
+				self.chan1.cursor2 = int(event.x / self.chan1.wave_len)
+				self.chan2.cursor2 = self.chan1.cursor2
+				self.chan3.cursor2 = self.chan1.cursor2
+
+				### Update the location label
+				loc = pk2.us_per_tick * self.chan1.cursor2
+				self.la_cur2_label.set_text("Cursor 2: " + `loc` + "us")
+
+			### If we have both cursors, update the distance label too
+			if self.chan1.cur1_en == True and self.chan1.cur2_en == True:
+				diff = 0
+				if self.chan1.cursor1 > self.chan1.cursor2:
+					diff = self.chan1.cursor1 - self.chan1.cursor2
+				else:
+					diff = self.chan1.cursor2 - self.chan1.cursor1
+				
+				### Display "N/A" if there is 0 difference (prevent div by 0)
+				if diff == 0:
+					self.la_cur_diff_label.set_text("Distance: N/A")
+				else:
+					khz = round((1.0 / diff) * 1000, 1)
+					self.la_cur_diff_label.set_text("Distance: %ius (%.1fkHz)" % (diff, khz))
+
+		### Clear cursors
+		elif event.button == 3:
+			self.clear_cursors()
+
+		### Update the window
+		self.parent.window.queue_draw()
+
+	def clear_cursors(self):
+		### Disable cursors on all of the boxes	
+		self.chan1.set_cursor(PK2_CURSOR_BOTH, False)
+		self.chan2.set_cursor(PK2_CURSOR_BOTH, False)
+		self.chan3.set_cursor(PK2_CURSOR_BOTH, False)
+
+		### Update the location label
+		self.la_cur1_label.set_text("Cursor 1: None")
+		self.la_cur2_label.set_text("Cursor 2: None")
+		self.la_cur_diff_label.set_text("Distance: N/A")
+		
+
+	def update_zoom(self, widget):
+		zoom_level = 0
+		
+		index = widget.get_active()
+		if index == 0:
+			zoom_level = 0.25
+		elif index == 1:
+			zoom_level = 0.5
+		elif index == 2:
+			zoom_level = 1.0
+		elif index == 3:
+			zoom_level = 2.0
+		elif index == 4:
+			zoom_level = 5.0
+	
+		
+		### Update the zoom level and size of the draw area
+		self.parent.la_display.chan1.set_zoom(zoom_level)
+		self.parent.la_display.chan2.set_zoom(zoom_level)
+		self.parent.la_display.chan3.set_zoom(zoom_level)
+
+		### Redraw the window
+		self.parent.window.queue_draw()
+	
+	def get(self):
+		return self.frame
+
+class pk2_la_drawbox(gtk.DrawingArea):
+	def __init__(self, pk2, source):
+		gtk.DrawingArea.__init__(self)
+		self.pk2 = pk2
+		self.source = source
+
+		### Draw buffer (graphics context)
+		self.gc = None
+
+		### Updated when allocated
+		self.width = 0
+		self.height = 0
+
+		### Tick mark distance between marks and length of mark at min zoom
+		self.tick_dist = 5
+		self.tick_len = 6
+		self.tick_long_len = 10
+
+		### Zoom level
+		self.tick_zoom = 1
+		
+		### Wave tick length
+		self.wave_len = int(self.tick_zoom * self.tick_dist)
+
+		### Bottom and Top (i.e. 1/0's) of the wave line
+		self.wave_high = 0
+		self.wave_low = 0
+
+		### Are cursors enabled?
+		self.cur1_en = False
+		self.cur2_en = False
+
+		### Cursor locations
+		self.cursor1 = 0.0
+		self.cursor2 = 0.0
+
+		### Connect to events 
+		self.connect('size-allocate', self.on_size_allocate)
+		self.connect('expose-event', self.on_expose_event)
+		self.connect('realize', self.on_realize)
+
+	### Enable/Disable cursors
+	def set_cursor(self, cur, val):
+		if cur & 1:
+			self.cur1_en = val
+		if cur & 2:
+			self.cur2_en = val
+
+	### Set the zoom level
+	def set_zoom(self, zoom):
+		### Update the zoom parameters
+		self.tick_zoom = zoom
+		self.wave_len = int(self.tick_zoom * self.tick_dist)
+
+		### Update the width and height
+		self.width = int(self.wave_len * PK2_SAMPLES)
+		self.height = 50
+
+		### Resize the drawing area
+		self.set_size_request(int(self.wave_len * PK2_SAMPLES), 50)
+
+		### Set the wave properties too
+		self.wave_high = self.tick_len + self.tick_len
+		self.wave_low = self.height - self.tick_len
+
+	### When the object is created
+	def on_realize(self, widget):
+		cmap = widget.get_colormap()
+		self.gc = widget.window.new_gc()
+
+	### When the object is actually placed
+	def on_size_allocate(self, widget, allocation):
+		self.width = allocation.width
+		self.height = allocation.height
+
+		### Set the wave properties too
+		self.wave_high = self.tick_len + self.tick_len
+		self.wave_low = allocation.height - self.tick_len
+
+		self.set_zoom(self.tick_zoom)
+
+	### Draw the acquired wave signal
+	def draw_wave(self, widget):
+		pk2 = self.pk2
+		cmap = widget.get_colormap()
+
+		### Set the color to green
+		self.gc.set_foreground(cmap.alloc_color("green"))
+
+		### Get the data source
+		data = pk2.get_la_data(self.source)
+		last = "0"
+		xpos = 0
+			
+		### Draw a 0'd out signal until we get data
+		if len(data) == 0:
+			widget.window.draw_line(self.gc, 0, self.wave_low, self.width, self.wave_low)
+			return
+
+		### Draw the signal
+		for d in data:
+			if d != last:
+				last = d
+				### Draw connector
+				widget.window.draw_line(self.gc, xpos, self.wave_high, xpos, self.wave_low)
+
+			### Draw a 0 line
+			if d == "0":
+				widget.window.draw_line(self.gc, xpos, self.wave_low, xpos + self.wave_len, self.wave_low)
+			### Draw a 1 line
+			else:
+				widget.window.draw_line(self.gc, xpos, self.wave_high, xpos + self.wave_len, self.wave_high)
+
+			### Move to the next x position
+			xpos = xpos + self.wave_len
+	
+	### When the object is drawn
+	def on_expose_event(self, widget, event):
+		cmap = widget.get_colormap()
+
+		### Draw the background
+		self.gc.set_foreground(cmap.alloc_color("black"))
+		widget.window.draw_rectangle(self.gc, True, 0, 0, self.width, self.height)
+
+		### Draw the ruler base
+		self.gc.set_foreground(cmap.alloc_color("white"))
+		widget.window.draw_line(self.gc, 0, 0, self.width, 0)
+		widget.window.draw_line(self.gc, 0, 0, self.height, 0)
+
+		### Draw the ruler tick marks
+		for i in range(0, PK2_SAMPLES):
+			if i % 10:
+				widget.window.draw_line(self.gc, i * self.wave_len, 0, i * self.wave_len, self.tick_len)
+			else:
+				widget.window.draw_line(self.gc, i * self.wave_len, 0, i * self.wave_len, self.tick_long_len)
+	
+		### Draw the wave from the captured data
+		self.draw_wave(widget)
+
+		### Draw the current cursor position
+		if self.cur1_en:
+			self.gc.set_foreground(cmap.alloc_color("red"))
+			widget.window.draw_line(self.gc, self.cursor1 * self.wave_len, 0, self.cursor1 * self.wave_len, self.height)
+		if self.cur2_en:
+			self.gc.set_foreground(cmap.alloc_color("blue"))
+			widget.window.draw_line(self.gc, self.cursor2 * self.wave_len, 0, self.cursor2 * self.wave_len, self.height)
+
+class pk2_io_button(gtk.Button):
+	def __init__(self, channel, pk2):
+		gtk.Button.__init__(self, "0")
+		self.pk2 = pk2
+		self.channel = channel
+		### Set the default look
+		self.set_io("Input")
+
+		### On the button press, update the state
+		self.connect('clicked', self.switch_state)
+	
+	### Switch between the current states
+	def switch_state(self, widget):
+		### Set the label with the right colors and value
+		if self.get_label() == "0":
+			self.pk2.chan_val[self.channel] = 1
+			self.set_label("1")
+			self.set_on(True)
+			
+		elif self.get_label() == "1":
+			self.pk2.chan_val[self.channel] = 0
+			self.set_label("0")
+			self.set_on(False)
+
+	def set_on(self, on):
+		### If we're in the input state, pass on == None to get the current value
+		if on == None:
+			if self.pk2.chan_val[self.channel] == 0:
+				on = False
+				self.set_label("0")
+			else:
+				on = True
+				self.set_label("1")
+
+		### Update the decorations
+		if on:
+			self.modify_bg(gtk.STATE_NORMAL, self.color_on)
+			self.modify_bg(gtk.STATE_INSENSITIVE, self.color_on)
+			self.modify_bg(gtk.STATE_SELECTED, self.color_on)
+			self.modify_bg(gtk.STATE_ACTIVE, self.color_on)
+			self.modify_bg(gtk.STATE_PRELIGHT, self.color_on)
+		else:
+			self.modify_bg(gtk.STATE_NORMAL, self.color_off)
+			self.modify_bg(gtk.STATE_INSENSITIVE, self.color_off)
+			self.modify_bg(gtk.STATE_SELECTED, self.color_off)
+			self.modify_bg(gtk.STATE_ACTIVE, self.color_off)
+			self.modify_bg(gtk.STATE_PRELIGHT, self.color_off)
+		
+		### Set the color of the text on the button
+		btn_lbl = self.child
+		btn_lbl.modify_font(pango.FontDescription("Times New Roman 24"))
+		btn_lbl.modify_fg(gtk.STATE_NORMAL, self.txt_color)
+		btn_lbl.modify_fg(gtk.STATE_INSENSITIVE, self.txt_color)
+		btn_lbl.modify_fg(gtk.STATE_SELECTED, self.txt_color)
+		btn_lbl.modify_fg(gtk.STATE_ACTIVE, self.txt_color)
+		btn_lbl.modify_fg(gtk.STATE_PRELIGHT, self.txt_color)
+
+		### Make sure we're queued to be updated
+		self.queue_draw()
+			
+	### Input or Output?
+	def set_io(self, io):
+		cmap = self.get_colormap()
+		
+		### Set the button to Input
+		if io == "Input":
+			### Set the button to inactive
+			self.set_sensitive(False)	
+			### Set the colors
+			self.color_on = cmap.alloc_color("blue")
+			self.color_off = cmap.alloc_color("blue4")
+
+		### Set the button to Output
+		else:
+			### Set the button to active
+			self.set_sensitive(True)
+			### Set the colors
+			self.color_on = cmap.alloc_color("red")
+			self.color_off = cmap.alloc_color("red4")
+
+		self.txt_color = cmap.alloc_color("white")
+
+		### Set the default value
+		self.set_label("0")
+		
+		### Set the direction in the pk2 module
+		self.pk2.chan_io[self.channel] = io
+		self.pk2.chan_val[self.channel] = 0
+		
+		### Set the colors
+		self.set_on(False)
+
+class pk2_io_gui:
+	def __init__(self, parent, pk2):
+		self.parent = parent		
+		self.pk2 = pk2
+		
+		frame = gtk.VBox(False, 0)
+		self.frame = frame
+
+		#####################################################
+		### Channel 0 / Pin 1
+		#####################################################
+		ch0 = gtk.HBox(False, 0)
+		frame.pack_start(ch0, True, False, 0)
+		### Label
+		ch0_lbl = gtk.Label("Pin 1: ")	
+		ch0.pack_start(ch0_lbl, False, False, 0)
+		### I/O Selection
+		self.chan0_io = gtk.combo_box_new_text()
+		self.chan0_io.append_text("Output")
+		self.chan0_io.set_active(0)
+		self.chan0_io.set_sensitive(False)
+		ch0.pack_start(self.chan0_io, True, True, 0)
+		### I/O Value
+		self.chan0 = pk2_io_button(0, pk2)
+		self.chan0.set_io("Output")
+		ch0.pack_start(self.chan0, True, True, 0)
+		
+		#####################################################
+		### Channel 1 / Pin 2
+		#####################################################
+		ch1 = gtk.HBox(False, 0)
+		frame.pack_start(ch1, True, False, 0)
+		### Label
+		ch1_lbl = gtk.Label("Pin 4: ")	
+		ch1.pack_start(ch1_lbl, False, False, 0)
+		### I/O Selection
+		self.chan1_io = gtk.combo_box_new_text()
+		self.chan1_io.append_text("Input")
+		self.chan1_io.append_text("Output")
+		self.chan1_io.set_active(0)
+		self.chan1_io.connect('changed', self.update_io, 1)
+		ch1.pack_start(self.chan1_io, True, True, 0)
+		### I/O Value
+		self.chan1 = pk2_io_button(1, pk2)
+		self.chan1.set_sensitive(False)
+		ch1.pack_start(self.chan1, True, True, 0)
+		
+		#####################################################
+		### Channel 2 / Pin 5
+		#####################################################
+		ch2 = gtk.HBox(False, 0)
+		frame.pack_start(ch2, True, False, 0)
+		### Label
+		ch2_lbl = gtk.Label("Pin 5: ")
+		ch2.pack_start(ch2_lbl, False, False, 0)
+		### I/O Selection
+		self.chan2_io = gtk.combo_box_new_text()
+		self.chan2_io.append_text("Input")
+		self.chan2_io.append_text("Output")
+		self.chan2_io.set_active(0)
+		self.chan2_io.connect('changed', self.update_io, 2)
+		ch2.pack_start(self.chan2_io, True, True, 0)
+		### I/O Value
+		self.chan2 = pk2_io_button(2, pk2)
+		self.chan2.set_sensitive(False)
+		ch2.pack_start(self.chan2, True, True, 0)
+		
+		#####################################################
+		### Channel 3 / Pin 6
+		#####################################################
+		ch3 = gtk.HBox(False, 0)
+		frame.pack_start(ch3, True, False, 0)
+		### Label
+		ch3_lbl = gtk.Label("Pin 6: ")	
+		ch3.pack_start(ch3_lbl, False, False, 0)
+		### I/O Selection
+		self.chan3_io = gtk.combo_box_new_text()
+		self.chan3_io.append_text("Input")
+		self.chan3_io.append_text("Output")
+		self.chan3_io.set_active(0)
+		self.chan3_io.connect('changed', self.update_io, 3)
+		ch3.pack_start(self.chan3_io, True, True, 0)
+		### I/O Value
+		self.chan3 = pk2_io_button(3, pk2)
+		self.chan3.set_sensitive(False)
+		ch3.pack_start(self.chan3, True, True, 0)
+
+		### Go! Button
+		run_io_btn = gtk.Button("Enable I/O")
+		run_io_btn.connect('clicked', self.run_io_btn)
+		frame.pack_start(run_io_btn, True, True, 0)
+
+	def run_io_btn(self, widget):
+		### Enable the I/O component
+		if widget.get_label() == "Enable I/O":
+			if self.pk2.run_io():
+				widget.set_label("Disable I/O")
+		else:
+			widget.set_label("Enable I/O")
+			self.pk2.io_running = False
+			self.pk2.io_thread.join()
+
+	def update_io(self, widget, chan):
+		index = widget.get_active()
+		io = "Input"
+		
+		### Figure out what the user wanted
+		if index == 0:
+			io = "Input"
+		else:
+			io = "Output"
+
+		### Figure out which channel we're attached to
+		if chan == 1:
+			self.chan1.set_io(io)
+		elif chan == 2:
+			self.chan2.set_io(io)
+		elif chan == 3:
+			self.chan3.set_io(io)
+
+	### Update the buttons based on the I/O from the program
+	def update_btns(self):
+		self.chan1.set_on(None)
+		self.chan2.set_on(None)
+		self.chan3.set_on(None)
+
+	def get(self):
+		return self.frame
+			
+class pk2_la_gui:
+	def __init__(self):
+		### Create the logic analyzer instance	
+		### FIXME Allow selecting different analyzers
+		self.pk2 = pk2_la(0, self)
+
+		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		window.connect("delete_event", self.delete)
+
+		### Create the notebook widget for switching between I/O and LA
+		notebook = gtk.Notebook()
+		notebook.set_tab_pos(gtk.POS_TOP)
+
+		###############################################################
+		### Make the Logic Analyzer Frame
+		###############################################################
+		la_frame = gtk.Frame("")
+		la_box = gtk.VBox(False, 0)
+		la_frame.add(la_box)
+
+		### Add the Logic Analyzer Display to the window
+		self.la_display = pk2_la_display(self, self.pk2)
+		la_box.pack_start(self.la_display.get(), True, False, 0)
+
+		### This box holds all of the options
+		la_opt_box = gtk.HBox(False, 0)
+		la_box.pack_start(la_opt_box, True, False, 0)
+
+		### Add the Trigger Frame to the Logic Analyzer
+		self.triggerFrame = pk2_triggerFrame(self, self.pk2)
+		la_opt_box.pack_start(self.triggerFrame.get(), True, False, 0)
+		### Add the Acquisition Frame to the Logic Analyzer
+		self.rxFrame = pk2_rxFrame(self, self.pk2)
+		la_opt_box.pack_start(self.rxFrame.get(), True, False, 0)
+		
+		### Add the "Run Button"
+		la_run = gtk.Button("Analyze")
+		la_run.connect("clicked", self.run_la)
+		la_box.pack_start(la_run, True, False, 0)
+
+		### Add the Frame Label
+		la_label = gtk.Label("Logic Analyzer")
+		### Add the Frame to the notebook
+		notebook.append_page(la_frame, la_label)
+		
+		###############################################################
+		### Make the I/O Frame
+		###############################################################
+		io_frame = gtk.Frame("")
+		### Add the I/O interface
+		self.ioFrame = pk2_io_gui(self, self.pk2)
+		io_frame.add(self.ioFrame.get())
+
+		### Add the Frame Label
+		io_label = gtk.Label("Logic I/O")
+		### Add the Frame to the Notebook
+		notebook.append_page(io_frame, io_label)
+
+		### Display the notebook
+		notebook.set_current_page(0)
+		window.add(notebook)
+		window.show_all()
+		self.window = window
+
+	def delete(self, widget, event=None):
+		if self.pk2.io_running:
+			self.pk2.io_running = False
+			self.pk2.io_thread.join()
+		gtk.main_quit()
+		return False
+
+	def run_la(self, widget):
+		pk2 = self.pk2
+	
+		### Check to be sure that we have a valid state
+		if not pk2.la_setup_valid():
+			err = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, "You must set at least one trigger")
+			err.set_title("Invalid Configuration")
+			err.run()
+			err.destroy()
+			return
+	
+		### Update the gui
+		widget.set_sensitive(False)
+		widget.set_label("Waiting for Trigger - Press the Red Button to Cancel")
+		### Update the window (done here because the pk2.acquire might take a long time)
+		gtk.main_iteration(False)
+		### Run the analyzer
+		if not self.pk2.la_acquire():
+			err = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, "The acquisition was canceled")
+			err.set_title("Canceled")
+			err.run()
+			err.destroy()
+			
+		### Update the window
+		self.window.queue_draw()
+		### We're done - either canceled or got data, set the button back
+		widget.set_label("Analyze")
+		widget.set_sensitive(True)
+
+	def main(self):
+		### Start the gtk app
+		gtk.main()
+
+### Run the main window
+if __name__ == "__main__":
+	base = pk2_la_gui()
+	try:
+		base.main()
+	except (KeyboardInterrupt):
+		if base.pk2.io_running:
+			base.pk2.io_running = False
+			base.pk2.io_thread.join()
+		sys.exit(-1)

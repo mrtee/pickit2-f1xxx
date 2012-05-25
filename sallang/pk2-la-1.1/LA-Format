@@ -1,0 +1,76 @@
+Configuration Packet
+=====================================================================
+
+0x00: 0xB8
+0x01: UNKNOWN (Seen values - 0x00 and 0x01, 0x01 is used in my app)
+0x02: (Enable - Don't care if the bit isn't set)
+	0x04: Ch1 Enable
+	0x08: Ch2 Enable
+	0x10: Ch3 Enable
+0x03: (Trigger on 1 if bit is set, trigger on 0 otherwise)
+	0x04: Ch1 Trigger on 1
+	0x08: Ch2 Trigger on 1
+	0x10: Ch3 Trigger on 1
+0x04: (Trigger on Edge)
+	0x04: Ch1 Edge
+	0x08: Ch2 Edge
+	0x10: Ch3 Edge
+0x05: Sample Repeats
+	0x01 - 0xFF (1 - 255)
+0x06: Trigger Window?
+	0x0A - Center
+	0x48 - End
+	0xCC - Start
+	0xB4 - Trigger 1
+	0x9C - Trigger 2
+	0x84 - Trigger 3
+
+0x07: Trigger Window?
+	0x00 - End
+	0x02 - Center
+	0x03 - Start
+	0x07 - Trigger 1
+	0x0B - Trigger 2
+	0x0F - Trigger 3
+0x08: Sample Rate Bit
+	0x00 - 1MHz
+	0x01 - 500khz
+	0x03 - 250khz
+	0x09 - 100kHz
+	0x13 - 50kHz
+	0x27 - 25kHz
+	0x63 - 10kHz
+	0xC7 - 5kHz
+
+
+Set Location in Trigger Bank
+=====================================================================
+
+0x00: 0xB9
+0x01: Offset in bank (0x00 and 0x80 used)
+0x02: Bank
+	0x06
+	0x07
+
+Send the Next Bank from the Current Address
+=====================================================================
+
+0x00: 0xAC
+	Updates the location pointer to the next location
+
+Returned Data Format
+====================================================================
+
+It seems that each data packet byte is laid out like this:
+
+Ch2 Ch1 0 Ch3 C2 Ch1 0 Ch3
+
+Perhaps it makes sense if you think of the byte as little endian, but I'm
+still seeing noise in these packets that doesn't show up in their application.
+Further testing is still required!
+
+Notes
+====================================================================
+* Note *All* packets are padded with 0xAD to 64 bytes if the length is < 64 bytes
+* The meaning of the response packet after the trigger is unknown at this time
+* Other sample rates are probably permissible, but I haven't tested to find them yet

@@ -1,0 +1,53 @@
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+a2                       READ_STATUS             
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+ea 00                      SET_ICSP_SPEED        Rate=0 us
+ad                       END_OF_BUFFER           
+---
+a3                       READ_VOLTAGES           
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f7                         MCLR_GND_ON           
+ad                       END_OF_BUFFER           
+---
+a0 00 1d 8f              SETVDD                  Vdd=3.3V, Vfault=2.8V
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fc                         VDD_GND_OFF           
+ff                         VDD_ON                
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 00 01                 RUN_SCRIPT              #0, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 01 01                 RUN_SCRIPT              #1, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f6                         MCLR_GND_OFF          
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fe                         VDD_OFF               
+fd                         VDD_GND_ON            
+ad                       END_OF_BUFFER           
+---
+a2                       READ_STATUS             
+ad                       END_OF_BUFFER           
+---
+a0 00 1d 8f              SETVDD                  Vdd=3.3V, Vfault=2.8V
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fe                         VDD_OFF               
+fd                         VDD_GND_ON            
+ad                       END_OF_BUFFER           
+---

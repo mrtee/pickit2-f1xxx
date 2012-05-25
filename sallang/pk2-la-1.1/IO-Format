@@ -1,0 +1,87 @@
+I/O Probe
+=====================================================================
+1. Read VDD/VPP -> Make sure we have a voltage on the device
+	Command: 0xA3
+  	Response:
+		0x00 16 bit value, little endian: VDD Voltage
+		0x02 16 bit value, little endian: VPP Voltage
+2. Set VDD
+	Command: 0xA1 CCP ADC THR
+		CCP: Always 0x40
+		ADC/THR: See the code for the equation from pk2cmd
+3. Set VPP
+	Command: 0xA0 CCP CCP THR 
+		CCP: 16 bit value, little endian
+		THR: See the code for the equation from pk2cmd
+4. Script 1 - Sets up the device
+	Command:
+		0xA6: Execute Script
+		0x09: Length (0x09 bytes)
+		0xFA: VDD Off
+		0xF7: MCLR Ground On
+		0xF9: VPP PWM(?) On
+		0xF3: Set ICSP Pins
+		0xXX: ICSP Pin value (See below)
+		0xCF: Set AUX Pins
+		0xXX: AUX Pin value (See below)
+		0xE8: Long Delay
+		0x14: Delay Amount
+
+	Read status after running this script
+		Status bits: (from the pk2 tool)
+			0x0001 - VDD GND On
+			0x0002 - VDD On
+			0x0004 - VPP GND On
+			0x0008 - VPP On
+			0x0010 - VDD Error
+			0x0020 - VPP Error
+			0x0040 - PICkit2 Button Pressed
+			0x0080 - Unknown
+			0x0100 - PICkit2 Reset
+			0x0200 - Unknown
+			0x0400 - ICD Transfer Timeout
+			0x0800 - Script Abort - Upload Full
+			0x1000 - Script Abort - Downlod Empty
+			0x2000 - Run Script on Empty Script
+			0x4000 - Script Buffer Overflow
+			0x8000 - Download Buffer Overflow
+	
+	ICSP Pins:
+		0x01: Pin 5 - I/O - 1 if Input / 0 if Output
+		0x02: Pin 4 - I/O - 1 if Input / 0 if Output
+		0x04: Pin 5 - Output Value
+		0x08: Pin 6 - Output Value
+	AUX Pins:
+		0x01: Pin 6 - I/O - 1 if Input / 0 if Output
+		0x02: Pin 6 - Output Value
+
+5. Script 2 - Sets up the I/O Ports
+	Command:
+		0xA6: Execute Script
+		0x09: Length (0x06 bytes)
+		0xFA: VDD Off
+		0xF7: MCLR Ground On
+		0xF3: Set ICSP Pins
+		0xXX: ICSP Pin value
+		0xCF: Set AUX Pins
+		0xXX: AUX Pin value
+	Read status after running this script (see above for details)
+
+6. Loop
+	a. Run Script 2 if the conditions have changed
+	b. Run Script to read from the device buffers
+		Command:
+			0xA6: Execute Script
+			0x02: Length (0x02 bytes)
+			0xDC: ICSP States Buffer
+			0xCE: Aux State Buffer
+			0xAA: Upload Data Command (?)
+		Return value:
+			0x00: Unknown
+			0x01: ICSP Byte
+				0x01 - Pin 5 (set/unset)
+				0x02 - Pin 4 (set/unset)
+			0x02: AUX Byte
+				0x01 - Pin 6 (set/unset)
+
+	c. Read Status

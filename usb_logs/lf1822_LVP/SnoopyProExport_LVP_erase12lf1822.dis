@@ -1,0 +1,576 @@
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+a0 00 18 75              SETVDD                  Vdd=2.7V, Vfault=2.3V
+ad                       END_OF_BUFFER           
+---
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+b4                       EXIT_UART_MODE          
+a7                       CLR_DOWNLOAD_BUFFER     
+a9                       CLR_UPLOAD_BUFFER       
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fe                         VDD_OFF               
+fd                         VDD_GND_ON            
+ad                       END_OF_BUFFER           
+---
+a0 00 1d 8f              SETVDD                  Vdd=3.3V, Vfault=2.8V
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+ea 00                      SET_ICSP_SPEED        Rate=0 us
+ad                       END_OF_BUFFER           
+---
+a3                       READ_VOLTAGES           
+ad                       END_OF_BUFFER           
+---
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+a0 80 2a d2              SETVDD                  Vdd=5.0V, Vfault=4.1V
+ad                       END_OF_BUFFER           
+---
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+a0 00 1d 8f              SETVDD                  Vdd=3.3V, Vfault=2.8V
+ad                       END_OF_BUFFER           
+---
+a0 00 1d 8f              SETVDD                  Vdd=3.3V, Vfault=2.8V
+ad                       END_OF_BUFFER           
+---
+a2                       READ_STATUS             
+ad                       END_OF_BUFFER           
+---
+a1 40 9e 6e              SETVPP                  Vpp=8.5V, Vfault=5.9V
+ad                       END_OF_BUFFER           
+---
+ab                       CLR_SCRIPT_BUFFER       
+ad                       END_OF_BUFFER           
+---
+a4 00 12                 DOWNLOAD_SCRIPT         #0, Length=18
+fa                         VPP_OFF               
+f7                         MCLR_GND_ON           
+f9                         VPP_PWM_ON            
+f5                         BUSY_LED_ON           
+f3 00                      SET_ICSP_PINS         DATA=0, CLOCK=0
+e8 14                      DELAY_LONG            Delay=109.2 ms (0 = 1397.76 ms)
+f6                         MCLR_GND_OFF          
+fb                         VPP_ON                
+e7 7f                      DELAY_SHORT           Delay=2705.1 us (0 = 5452.8 us)
+f7                         MCLR_GND_ON           
+fa                         VPP_OFF               
+fb                         VPP_ON                
+f6                         MCLR_GND_OFF          
+e8 13                      DELAY_LONG            Delay=103.74 ms (0 = 1397.76 ms)
+ad                       END_OF_BUFFER           
+---
+a4 01 0c                 DOWNLOAD_SCRIPT         #1, Length=12
+fa                         VPP_OFF               
+f7                         MCLR_GND_ON           
+cf 00                      SET_AUX               AUX logic level=0, AUX direction=0 (1 = input, 0 = output)
+f8                         VPP_PWM_OFF           
+f3 03                      SET_ICSP_PINS         DATA=input, CLOCK=input
+e8 0a                      DELAY_LONG            Delay=54.6 ms (0 = 1397.76 ms)
+cf 01                      SET_AUX               AUX logic level=0, AUX direction=1 (1 = input, 0 = output)
+f4                         BUSY_LED_OFF          
+ad                       END_OF_BUFFER           
+---
+a4 02 12                 DOWNLOAD_SCRIPT         #2, Length=18
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 03 05                   LOOP                  Bytes_back=3, iterations=5 (0 = 256)
+ee 06 04                   WRITE_BITS_LITERAL    Bits=6, literal=4h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ad                       END_OF_BUFFER           
+---
+a4 03 0b                 DOWNLOAD_SCRIPT         #3, Length=11
+ee 06 04                   WRITE_BITS_LITERAL    Bits=6, literal=4h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 08 1f                   LOOP                  Bytes_back=8, iterations=31 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+a4 05 0b                 DOWNLOAD_SCRIPT         #5, Length=11
+ee 06 16                   WRITE_BITS_LITERAL    Bits=6, literal=16h
+e4 05                      GOTO_INDEX            Signed offset=5
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+dd 03                      LOOPBUFFER            Bytes_back=3
+db                         POP_DOWNLOAD          
+ad                       END_OF_BUFFER           
+---
+a4 07 18                 DOWNLOAD_SCRIPT         #7, Length=24
+ee 06 02                   WRITE_BITS_LITERAL    Bits=6, literal=2h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+ee 06 02                   WRITE_BITS_LITERAL    Bits=6, literal=2h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+e9 08 0e                   LOOP                  Bytes_back=8, iterations=14 (0 = 256)
+ee 06 08                   WRITE_BITS_LITERAL    Bits=6, literal=8h
+e7 8d                      DELAY_SHORT           Delay=3003.3 us (0 = 5452.8 us)
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+ad                       END_OF_BUFFER           
+---
+a4 09 0b                 DOWNLOAD_SCRIPT         #9, Length=11
+ee 06 05                   WRITE_BITS_LITERAL    Bits=6, literal=5h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 08 1f                   LOOP                  Bytes_back=8, iterations=31 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+a4 0b 0d                 DOWNLOAD_SCRIPT         #11, Length=13
+ee 06 03                   WRITE_BITS_LITERAL    Bits=6, literal=3h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+ee 06 08                   WRITE_BITS_LITERAL    Bits=6, literal=8h
+e8 01                      DELAY_LONG            Delay=5.46 ms (0 = 1397.76 ms)
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+ad                       END_OF_BUFFER           
+---
+a4 0d 18                 DOWNLOAD_SCRIPT         #13, Length=24
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 03 06                   LOOP                  Bytes_back=3, iterations=6 (0 = 256)
+ee 06 04                   WRITE_BITS_LITERAL    Bits=6, literal=4h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 08 01                   LOOP                  Bytes_back=8, iterations=1 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+a4 0f 1d                 DOWNLOAD_SCRIPT         #15, Length=29
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 03 06                   LOOP                  Bytes_back=3, iterations=6 (0 = 256)
+ee 06 08                   WRITE_BITS_LITERAL    Bits=6, literal=8h
+e7 f0                      DELAY_SHORT           Delay=5112.0 us (0 = 5452.8 us)
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+ee 06 02                   WRITE_BITS_LITERAL    Bits=6, literal=2h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+ee 06 08                   WRITE_BITS_LITERAL    Bits=6, literal=8h
+e7 fa                      DELAY_SHORT           Delay=5325.0 us (0 = 5452.8 us)
+ad                       END_OF_BUFFER           
+---
+a4 11 12                 DOWNLOAD_SCRIPT         #17, Length=18
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 04                   WRITE_BITS_LITERAL    Bits=6, literal=4h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 08 03                   LOOP                  Bytes_back=8, iterations=3 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+a4 13 17                 DOWNLOAD_SCRIPT         #19, Length=23
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 02                   WRITE_BITS_LITERAL    Bits=6, literal=2h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+ee 06 08                   WRITE_BITS_LITERAL    Bits=6, literal=8h
+e7 8d                      DELAY_SHORT           Delay=3003.3 us (0 = 5452.8 us)
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 0d 03                   LOOP                  Bytes_back=13, iterations=3 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+a4 15 22                 DOWNLOAD_SCRIPT         #21, Length=34
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 03 08                   LOOP                  Bytes_back=3, iterations=8 (0 = 256)
+ee 06 09                   WRITE_BITS_LITERAL    Bits=6, literal=9h
+e8 02                      DELAY_LONG            Delay=10.92 ms (0 = 1397.76 ms)
+ee 06 02                   WRITE_BITS_LITERAL    Bits=6, literal=2h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+ee 06 08                   WRITE_BITS_LITERAL    Bits=6, literal=8h
+e7 fa                      DELAY_SHORT           Delay=5325.0 us (0 = 5452.8 us)
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 12 01                   LOOP                  Bytes_back=18, iterations=1 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+a4 16 11                 DOWNLOAD_SCRIPT         #22, Length=17
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 09                   WRITE_BITS_LITERAL    Bits=6, literal=9h
+e8 02                      DELAY_LONG            Delay=10.92 ms (0 = 1397.76 ms)
+ee 06 0b                   WRITE_BITS_LITERAL    Bits=6, literal=bh
+e8 02                      DELAY_LONG            Delay=10.92 ms (0 = 1397.76 ms)
+ad                       END_OF_BUFFER           
+---
+a4 17 0c                 DOWNLOAD_SCRIPT         #23, Length=12
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 09                   WRITE_BITS_LITERAL    Bits=6, literal=9h
+e8 02                      DELAY_LONG            Delay=10.92 ms (0 = 1397.76 ms)
+ad                       END_OF_BUFFER           
+---
+a4 1b 0b                 DOWNLOAD_SCRIPT         #27, Length=11
+ee 06 04                   WRITE_BITS_LITERAL    Bits=6, literal=4h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 08 07                   LOOP                  Bytes_back=8, iterations=7 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+af                       SCRIPT_BUFFER_CHKSM     
+ad                       END_OF_BUFFER           
+---
+a1 40 3d 2a              SETVPP                  Vpp=3.3V, Vfault=2.3V
+ad                       END_OF_BUFFER           
+---
+ab                       CLR_SCRIPT_BUFFER       
+ad                       END_OF_BUFFER           
+---
+a4 00 1d                 DOWNLOAD_SCRIPT         #0, Length=29
+fa                         VPP_OFF               
+f7                         MCLR_GND_ON           
+f9                         VPP_PWM_ON            
+f5                         BUSY_LED_ON           
+f3 00                      SET_ICSP_PINS         DATA=0, CLOCK=0
+e8 20                      DELAY_LONG            Delay=174.72 ms (0 = 1397.76 ms)
+f6                         MCLR_GND_OFF          
+fb                         VPP_ON                
+e7 18                      DELAY_SHORT           Delay=511.20000000000005 us (0 = 5452.8 us)
+fa                         VPP_OFF               
+f7                         MCLR_GND_ON           
+e7 30                      DELAY_SHORT           Delay=1022.4000000000001 us (0 = 5452.8 us)
+f2 50                      WRITE_BYTE_LITERAL    Byte=50h
+f2 48                      WRITE_BYTE_LITERAL    Byte=48h
+f2 43                      WRITE_BYTE_LITERAL    Byte=43h
+f2 4d                      WRITE_BYTE_LITERAL    Byte=4dh
+ee 01 00                   WRITE_BITS_LITERAL    Bits=1, literal=0h
+e8 02                      DELAY_LONG            Delay=10.92 ms (0 = 1397.76 ms)
+ad                       END_OF_BUFFER           
+---
+a4 01 0c                 DOWNLOAD_SCRIPT         #1, Length=12
+fa                         VPP_OFF               
+f7                         MCLR_GND_ON           
+cf 00                      SET_AUX               AUX logic level=0, AUX direction=0 (1 = input, 0 = output)
+f8                         VPP_PWM_OFF           
+f3 03                      SET_ICSP_PINS         DATA=input, CLOCK=input
+e8 0a                      DELAY_LONG            Delay=54.6 ms (0 = 1397.76 ms)
+cf 01                      SET_AUX               AUX logic level=0, AUX direction=1 (1 = input, 0 = output)
+f4                         BUSY_LED_OFF          
+ad                       END_OF_BUFFER           
+---
+a4 02 12                 DOWNLOAD_SCRIPT         #2, Length=18
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 03 05                   LOOP                  Bytes_back=3, iterations=5 (0 = 256)
+ee 06 04                   WRITE_BITS_LITERAL    Bits=6, literal=4h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ad                       END_OF_BUFFER           
+---
+a4 03 0b                 DOWNLOAD_SCRIPT         #3, Length=11
+ee 06 04                   WRITE_BITS_LITERAL    Bits=6, literal=4h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 08 1f                   LOOP                  Bytes_back=8, iterations=31 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+a4 05 0b                 DOWNLOAD_SCRIPT         #5, Length=11
+ee 06 16                   WRITE_BITS_LITERAL    Bits=6, literal=16h
+e4 05                      GOTO_INDEX            Signed offset=5
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+dd 03                      LOOPBUFFER            Bytes_back=3
+db                         POP_DOWNLOAD          
+ad                       END_OF_BUFFER           
+---
+a4 07 18                 DOWNLOAD_SCRIPT         #7, Length=24
+ee 06 02                   WRITE_BITS_LITERAL    Bits=6, literal=2h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+ee 06 02                   WRITE_BITS_LITERAL    Bits=6, literal=2h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+e9 08 0e                   LOOP                  Bytes_back=8, iterations=14 (0 = 256)
+ee 06 08                   WRITE_BITS_LITERAL    Bits=6, literal=8h
+e7 8d                      DELAY_SHORT           Delay=3003.3 us (0 = 5452.8 us)
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+ad                       END_OF_BUFFER           
+---
+a4 09 0b                 DOWNLOAD_SCRIPT         #9, Length=11
+ee 06 05                   WRITE_BITS_LITERAL    Bits=6, literal=5h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 08 1f                   LOOP                  Bytes_back=8, iterations=31 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+a4 0b 0d                 DOWNLOAD_SCRIPT         #11, Length=13
+ee 06 03                   WRITE_BITS_LITERAL    Bits=6, literal=3h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+ee 06 08                   WRITE_BITS_LITERAL    Bits=6, literal=8h
+e8 01                      DELAY_LONG            Delay=5.46 ms (0 = 1397.76 ms)
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+ad                       END_OF_BUFFER           
+---
+a4 0d 18                 DOWNLOAD_SCRIPT         #13, Length=24
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 03 06                   LOOP                  Bytes_back=3, iterations=6 (0 = 256)
+ee 06 04                   WRITE_BITS_LITERAL    Bits=6, literal=4h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 08 01                   LOOP                  Bytes_back=8, iterations=1 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+a4 0f 1d                 DOWNLOAD_SCRIPT         #15, Length=29
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 03 06                   LOOP                  Bytes_back=3, iterations=6 (0 = 256)
+ee 06 08                   WRITE_BITS_LITERAL    Bits=6, literal=8h
+e7 f0                      DELAY_SHORT           Delay=5112.0 us (0 = 5452.8 us)
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+ee 06 02                   WRITE_BITS_LITERAL    Bits=6, literal=2h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+ee 06 08                   WRITE_BITS_LITERAL    Bits=6, literal=8h
+e7 fa                      DELAY_SHORT           Delay=5325.0 us (0 = 5452.8 us)
+ad                       END_OF_BUFFER           
+---
+a4 11 12                 DOWNLOAD_SCRIPT         #17, Length=18
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 04                   WRITE_BITS_LITERAL    Bits=6, literal=4h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 08 03                   LOOP                  Bytes_back=8, iterations=3 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+a4 13 17                 DOWNLOAD_SCRIPT         #19, Length=23
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 02                   WRITE_BITS_LITERAL    Bits=6, literal=2h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+ee 06 08                   WRITE_BITS_LITERAL    Bits=6, literal=8h
+e7 8d                      DELAY_SHORT           Delay=3003.3 us (0 = 5452.8 us)
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 0d 03                   LOOP                  Bytes_back=13, iterations=3 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+a4 15 22                 DOWNLOAD_SCRIPT         #21, Length=34
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 03 08                   LOOP                  Bytes_back=3, iterations=8 (0 = 256)
+ee 06 09                   WRITE_BITS_LITERAL    Bits=6, literal=9h
+e8 02                      DELAY_LONG            Delay=10.92 ms (0 = 1397.76 ms)
+ee 06 02                   WRITE_BITS_LITERAL    Bits=6, literal=2h
+f1                         WRITE_BYTE_BUFFER     
+f1                         WRITE_BYTE_BUFFER     
+ee 06 08                   WRITE_BITS_LITERAL    Bits=6, literal=8h
+e7 fa                      DELAY_SHORT           Delay=5325.0 us (0 = 5452.8 us)
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 12 01                   LOOP                  Bytes_back=18, iterations=1 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+a4 16 11                 DOWNLOAD_SCRIPT         #22, Length=17
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 09                   WRITE_BITS_LITERAL    Bits=6, literal=9h
+e8 02                      DELAY_LONG            Delay=10.92 ms (0 = 1397.76 ms)
+ee 06 0b                   WRITE_BITS_LITERAL    Bits=6, literal=bh
+e8 02                      DELAY_LONG            Delay=10.92 ms (0 = 1397.76 ms)
+ad                       END_OF_BUFFER           
+---
+a4 17 0c                 DOWNLOAD_SCRIPT         #23, Length=12
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 09                   WRITE_BITS_LITERAL    Bits=6, literal=9h
+e8 02                      DELAY_LONG            Delay=10.92 ms (0 = 1397.76 ms)
+ad                       END_OF_BUFFER           
+---
+a4 1b 0b                 DOWNLOAD_SCRIPT         #27, Length=11
+ee 06 04                   WRITE_BITS_LITERAL    Bits=6, literal=4h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 08 07                   LOOP                  Bytes_back=8, iterations=7 (0 = 256)
+ad                       END_OF_BUFFER           
+---
+af                       SCRIPT_BUFFER_CHKSM     
+ad                       END_OF_BUFFER           
+---
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+a2                       READ_STATUS             
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+ea 00                      SET_ICSP_SPEED        Rate=0 us
+ad                       END_OF_BUFFER           
+---
+a3                       READ_VOLTAGES           
+ad                       END_OF_BUFFER           
+---
+a1 40 3d 2a              SETVPP                  Vpp=3.3V, Vfault=2.3V
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f7                         MCLR_GND_ON           
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fc                         VDD_GND_OFF           
+ff                         VDD_ON                
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a6 1d                    EXECUTE_SCRIPT          Length=29
+fa                         VPP_OFF               
+f7                         MCLR_GND_ON           
+f9                         VPP_PWM_ON            
+f5                         BUSY_LED_ON           
+f3 00                      SET_ICSP_PINS         DATA=0, CLOCK=0
+e8 20                      DELAY_LONG            Delay=174.72 ms (0 = 1397.76 ms)
+f6                         MCLR_GND_OFF          
+fb                         VPP_ON                
+e7 18                      DELAY_SHORT           Delay=511.20000000000005 us (0 = 5452.8 us)
+fa                         VPP_OFF               
+f7                         MCLR_GND_ON           
+e7 30                      DELAY_SHORT           Delay=1022.4000000000001 us (0 = 5452.8 us)
+f2 50                      WRITE_BYTE_LITERAL    Byte=50h
+f2 48                      WRITE_BYTE_LITERAL    Byte=48h
+f2 43                      WRITE_BYTE_LITERAL    Byte=43h
+f2 4d                      WRITE_BYTE_LITERAL    Byte=4dh
+ee 01 00                   WRITE_BITS_LITERAL    Bits=1, literal=0h
+e8 02                      DELAY_LONG            Delay=10.92 ms (0 = 1397.76 ms)
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a6 12                    EXECUTE_SCRIPT          Length=18
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 03 05                   LOOP                  Bytes_back=3, iterations=5 (0 = 256)
+ee 06 04                   WRITE_BITS_LITERAL    Bits=6, literal=4h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ad                       END_OF_BUFFER           
+---
+aa                       UPLOAD_DATA             
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a6 0c                    EXECUTE_SCRIPT          Length=12
+fa                         VPP_OFF               
+f7                         MCLR_GND_ON           
+cf 00                      SET_AUX               AUX logic level=0, AUX direction=0 (1 = input, 0 = output)
+f8                         VPP_PWM_OFF           
+f3 03                      SET_ICSP_PINS         DATA=input, CLOCK=input
+e8 0a                      DELAY_LONG            Delay=54.6 ms (0 = 1397.76 ms)
+cf 01                      SET_AUX               AUX logic level=0, AUX direction=1 (1 = input, 0 = output)
+f4                         BUSY_LED_OFF          
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fe                         VDD_OFF               
+fd                         VDD_GND_ON            
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f6                         MCLR_GND_OFF          
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fe                         VDD_OFF               
+fd                         VDD_GND_ON            
+ad                       END_OF_BUFFER           
+---
+a0 00 1d 8f              SETVDD                  Vdd=3.3V, Vfault=2.8V
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f7                         MCLR_GND_ON           
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fc                         VDD_GND_OFF           
+ff                         VDD_ON                
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 00 01                 RUN_SCRIPT              #0, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a6 0e                    EXECUTE_SCRIPT          Length=14
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 11                   WRITE_BITS_LITERAL    Bits=6, literal=11h
+e8 01                      DELAY_LONG            Delay=5.46 ms (0 = 1397.76 ms)
+e7 19                      DELAY_SHORT           Delay=532.5 us (0 = 5452.8 us)
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 01 01                 RUN_SCRIPT              #1, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f6                         MCLR_GND_OFF          
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 00 01                 RUN_SCRIPT              #0, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 16 01                 RUN_SCRIPT              #22, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 01 01                 RUN_SCRIPT              #1, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f6                         MCLR_GND_OFF          
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fe                         VDD_OFF               
+fd                         VDD_GND_ON            
+ad                       END_OF_BUFFER           
+---

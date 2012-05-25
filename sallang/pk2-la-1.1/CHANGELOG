@@ -1,0 +1,12 @@
+pk2-la Changelog
+
+2010-03-06 Joseph Jezak
+	* Allow for detaching existing drivers using the device, thanks to Marty (harnesser) for the fix.
+	* Apply fix for div by 0 when calculating distance, thanks to Matthew Beckler for the fix.
+	* Release (v1.1)
+
+2009-08-10 Joseph Jezak
+	* Fix for falling edge trigger
+
+2009-05-28 Joseph Jezak
+	* Initial Release (v1.0)

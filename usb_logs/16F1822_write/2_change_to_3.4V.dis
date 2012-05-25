@@ -1,0 +1,6 @@
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+a0 c0 1d 93              SETVDD                  Vdd=3.4V, Vfault=2.9V
+ad                       END_OF_BUFFER           
+---

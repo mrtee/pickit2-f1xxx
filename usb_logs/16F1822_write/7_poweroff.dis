@@ -1,0 +1,8 @@
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fe                         VDD_OFF               
+fd                         VDD_GND_ON            
+ad                       END_OF_BUFFER           
+---

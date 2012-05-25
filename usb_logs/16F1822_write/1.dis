@@ -1,0 +1,47 @@
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+a0 00 18 75              SETVDD                  Vdd=2.7V, Vfault=2.3V
+ad                       END_OF_BUFFER           
+---
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+b4                       EXIT_UART_MODE          
+a7                       CLR_DOWNLOAD_BUFFER     
+a9                       CLR_UPLOAD_BUFFER       
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fe                         VDD_OFF               
+fd                         VDD_GND_ON            
+ad                       END_OF_BUFFER           
+---
+a0 00 1d 8f              SETVDD                  Vdd=3.3V, Vfault=2.8V
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+ea 00                      SET_ICSP_SPEED        Rate=0 us
+ad                       END_OF_BUFFER           
+---
+a3                       READ_VOLTAGES           
+ad                       END_OF_BUFFER           
+---
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+a0 80 2a d2              SETVDD                  Vdd=5.0V, Vfault=4.1V
+ad                       END_OF_BUFFER           
+---
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+a0 00 1d 8f              SETVDD                  Vdd=3.3V, Vfault=2.8V
+ad                       END_OF_BUFFER           
+---
+a0 00 1d 8f              SETVDD                  Vdd=3.3V, Vfault=2.8V
+ad                       END_OF_BUFFER           
+---
+a2                       READ_STATUS             
+ad                       END_OF_BUFFER           
+---

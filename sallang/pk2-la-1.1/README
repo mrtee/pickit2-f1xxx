@@ -1,0 +1,54 @@
+PK2-LA: Logic Analyzer and I/O Probe for the Microchip PICkit2 programmer (v1.1)
+================================================================================
+
+Requirements:
+================================================================================
+
+python built with threading support
+pyusb
+>=pygtk-2.0
+
+Getting Started:
+================================================================================
+
+Simply run pk2-la to start the analyzer. You must have your PICkit2 plugged in
+at startup.
+
+Logic Analzyer:
+=================================================================================
+A source should be attached to Pin 2 of the PICkit2 in order to use this 
+component, if not, logic high values cannot be detected! It is recommended that
+you also connect Pin 3 to ground.
+
+The logic analzyer has three channels which can be used to collect data. This
+data is then displayed in the window at the top of the screen. This data may
+be saved as either a text representation or a png file. The data itself can be
+captured under a number of different circumstances by adjusting the trigger
+values.
+
+Note: Only the visible area will be saved to the png.
+
+I/O Probe:
+================================================================================
+A 2.5v to 5.0v source *must* be attached to Pin 2 of the PICkit2 in order to
+use this component. It is recommended that you also connect Pin 3 to ground.
+
+Select the initial conditions for the probe, including the directionality of
+the pins. Once you are satisfied with the settings, press the "Enable I/O"
+button to begin using the probe. Press it again to stop. While the probe is
+running, the current state of the pins will be shown in the blue (input) and
+red (output) boxes on the right of the window. Clicking on an output box
+will change the state of the pin.
+
+Note: Pin 1 can only be used as an output pin. This is a hardare limitation.
+
+Bugs:
+================================================================================
+Please file them in the sourceforge tracker at: http://pk2-la.sf.net
+Thanks!
+
+Any other questions or comments? 
+================================================================================
+Please contact Joseph Jezak at josejx@gentoo.org
+
+Hope you find this useful!

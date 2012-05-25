@@ -1,0 +1,449 @@
+76                       FIRMWARE_VERSION        
+ad                       END_OF_BUFFER           
+---
+a2                       READ_STATUS             
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+ea 00                      SET_ICSP_SPEED        Rate=0 us
+ad                       END_OF_BUFFER           
+---
+a3                       READ_VOLTAGES           
+ad                       END_OF_BUFFER           
+---
+a1 40 9e 6e              SETVPP                  Vpp=8.5V, Vfault=5.9V
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f7                         MCLR_GND_ON           
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fc                         VDD_GND_OFF           
+ff                         VDD_ON                
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a6 12                    EXECUTE_SCRIPT          Length=18
+fa                         VPP_OFF               
+f7                         MCLR_GND_ON           
+f9                         VPP_PWM_ON            
+f5                         BUSY_LED_ON           
+f3 00                      SET_ICSP_PINS         DATA=0, CLOCK=0
+e8 14                      DELAY_LONG            Delay=109.2 ms (0 = 1397.76 ms)
+f6                         MCLR_GND_OFF          
+fb                         VPP_ON                
+e7 7f                      DELAY_SHORT           Delay=2705.1 us (0 = 5452.8 us)
+f7                         MCLR_GND_ON           
+fa                         VPP_OFF               
+fb                         VPP_ON                
+f6                         MCLR_GND_OFF          
+e8 13                      DELAY_LONG            Delay=103.74 ms (0 = 1397.76 ms)
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a6 12                    EXECUTE_SCRIPT          Length=18
+ee 06 00                   WRITE_BITS_LITERAL    Bits=6, literal=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+f2 00                      WRITE_BYTE_LITERAL    Byte=0h
+ee 06 06                   WRITE_BITS_LITERAL    Bits=6, literal=6h
+e9 03 05                   LOOP                  Bytes_back=3, iterations=5 (0 = 256)
+ee 06 04                   WRITE_BITS_LITERAL    Bits=6, literal=4h
+f0                         READ_BYTE_BUFFER      
+f0                         READ_BYTE_BUFFER      
+ad                       END_OF_BUFFER           
+---
+aa                       UPLOAD_DATA             
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a6 0c                    EXECUTE_SCRIPT          Length=12
+fa                         VPP_OFF               
+f7                         MCLR_GND_ON           
+cf 00                      SET_AUX               AUX logic level=0, AUX direction=0 (1 = input, 0 = output)
+f8                         VPP_PWM_OFF           
+f3 03                      SET_ICSP_PINS         DATA=input, CLOCK=input
+e8 0a                      DELAY_LONG            Delay=54.6 ms (0 = 1397.76 ms)
+cf 01                      SET_AUX               AUX logic level=0, AUX direction=1 (1 = input, 0 = output)
+f4                         BUSY_LED_OFF          
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fe                         VDD_OFF               
+fd                         VDD_GND_ON            
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f6                         MCLR_GND_OFF          
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fe                         VDD_OFF               
+fd                         VDD_GND_ON            
+ad                       END_OF_BUFFER           
+---
+a0 00 1d 8f              SETVDD                  Vdd=3.3V, Vfault=2.8V
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f7                         MCLR_GND_ON           
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fc                         VDD_GND_OFF           
+ff                         VDD_ON                
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 00 01                 RUN_SCRIPT              #0, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 03 02                 RUN_SCRIPT              #3, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 01 01                 RUN_SCRIPT              #1, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f6                         MCLR_GND_OFF          
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 00 01                 RUN_SCRIPT              #0, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 09 02                 RUN_SCRIPT              #9, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 09 02                 RUN_SCRIPT              #9, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 09 02                 RUN_SCRIPT              #9, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 09 02                 RUN_SCRIPT              #9, 2 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 01 01                 RUN_SCRIPT              #1, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f6                         MCLR_GND_OFF          
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 00 01                 RUN_SCRIPT              #0, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 11 01                 RUN_SCRIPT              #17, 1 times (0 is 256)
+ac                       UPLOAD_DATA_NOLEN       
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 01 01                 RUN_SCRIPT              #1, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f6                         MCLR_GND_OFF          
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 00 01                 RUN_SCRIPT              #0, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 0d 01                 RUN_SCRIPT              #13, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+aa                       UPLOAD_DATA             
+ad                       END_OF_BUFFER           
+---
+a9                       CLR_UPLOAD_BUFFER       
+a5 01 01                 RUN_SCRIPT              #1, 1 times (0 is 256)
+ad                       END_OF_BUFFER           
+---
+a6 01                    EXECUTE_SCRIPT          Length=1
+f6                         MCLR_GND_OFF          
+ad                       END_OF_BUFFER           
+---
+a6 02                    EXECUTE_SCRIPT          Length=2
+fe                         VDD_OFF               
+fd                         VDD_GND_ON            
+ad                       END_OF_BUFFER           
+---
