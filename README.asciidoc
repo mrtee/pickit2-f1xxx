@@ -18,6 +18,7 @@ rights issue]..
 * Connect a PIC12LF1822 device to the programmer and type:
 ----
 cd test
+
 ruby test_programming.rb
 ----
 There is a little example in the 'test' directory which writes a 'hello world'
