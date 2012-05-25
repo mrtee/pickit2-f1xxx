@@ -15,7 +15,7 @@ How to run/test/use
 * Note the
 http://sourceforge.net/apps/mediawiki/piklab/index.php?title=USB_Port_Problems[usb
 rights issue]..
-* Connect a PIC12LF1822 device into the programmer and type:
+* Connect a PIC12LF1822 device to the programmer and type:
 ----
 ruby test_programming.rb
 ----
