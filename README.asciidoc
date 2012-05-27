@@ -17,11 +17,23 @@ http://sourceforge.net/apps/mediawiki/piklab/index.php?title=USB_Port_Problems[u
 rights issue]..
 * Connect a PIC12LF1822 device to the programmer and type:
 ----
-cd test; ruby test_programming.rb
+cd test; ruby test_programming.rb blink.hex
 ----
 There is a little example in the 'test' directory which writes a 'hello world'
 program into the chip. The only thing that the 'hello world' does is it
-switches the RA2 pin on. You can replace the example hex file with any other
+switches the RA2 pin on. The other test file blinks the led connected to RA2,
+it is called blink.hex.
+The command
+----
+ruby on.rb
+----
+switches the device power on,
+----
+ruby off.rb
+----
+switches the power off. Voltage is 3.3V
+
+You can replace the example hex file with any other
 one.  http://gputils.sourceforge.net/[Gputils] can compile assembly source for
 that f1-series chips.  Feature for other chips can be also implemented. Check
 out the file test/lib/pic14_f1_device_datas.rb Implementing new chips and its'
