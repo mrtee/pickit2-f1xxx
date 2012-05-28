@@ -183,12 +183,13 @@ module PICkit2
     def run_script(arg); [0xA5, arg[:number], arg[:times]]; end
 
     def execute_script(*s)
-      while (s[0].class == Array) && [Array, NilClass].include?(s[0][0].class)
+      while (s[0].class == Array) && ! s[0][0].kind_of?(Numeric)
 	s = s[0]
       end
-      s.compact!
+      s.keep_if {|q| q.is_a?(Array)}
       out = len = []
       s.each do |w|
+	w.keep_if {|q| q.kind_of?(Numeric)}
 	if w[0] == 0xE9 and w.length == 3 # loop command
 	  sum = 0
 	  len[-1*w[1]..-1].each {|x| sum += x }

@@ -436,7 +436,8 @@ module PICkit2
 	send(
 	  execute_script(
 	    write_bits_literal(0x16),
-	    write_bits_literal(9),
+	    # if program memory was not erased previously then do it
+	    @dataBuffer.index {|x| @deviceData[:configurationMemory] === x[0]}.nil? && write_bits_literal(9),
 	    delay_long(5)
 	  )
 	)
