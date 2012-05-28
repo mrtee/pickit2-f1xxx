@@ -31,7 +31,7 @@ puts pk.readDataMemory.map {|x| "%04X" % x}.inspect
 
 pk.exitPVMode
 
-pk.readHexFile("../hexek/firstproject.X.production.hex")
+pk.readHexFile("test.hex")
 
 pk.enterPVMode("HVP")
 
