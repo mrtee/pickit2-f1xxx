@@ -53,7 +53,7 @@ module PICkit2
       if block[0].class == String
 	block = block[0]
       else
-	block = block.flatten.compact.pack("C*")
+	block = block.flatten.select {|q| q.kind_of?(Numeric)}.pack("C*")
       end
       @mic.bulk_transfer(:endpoint => 1, :dataOut => block+"\xad"*(64-block.length))
     end
