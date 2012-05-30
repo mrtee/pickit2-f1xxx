@@ -89,7 +89,6 @@ module PICkit2
 	    v && vdd_gnd_on,
 	    v && delay_long(50), # capacitor discharge time
 	    v && vdd_gnd_off,
-	    set_icsp_pins,
 	    mclr_gnd_off
 	  )
 	)
@@ -111,7 +110,7 @@ module PICkit2
 	  )
 	end
       end
-      send(execute_script(busy_led_off))
+      send(execute_script(set_icsp_pins, busy_led_off))
     end
 
     # Read PIC mcu Device ID (4-bit revision not included)
