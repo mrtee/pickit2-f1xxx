@@ -4,7 +4,7 @@ http://www.microchip.com/pagehandler/en-us/family/8bit/architecture/enhancedmidr
 Mid-Range Core] (eg. PIC12F1822) and possible more..._
 
 This software is in an early stage, but at this time it can program a
-PIC12LF1822 with any .hex file from command line.  It contains also a big
+PIC12F1822 with any .hex file from command line.  It contains also a big
 PICKit2 control framework written in ruby and usb-capture dissassembler toolkit
 for reverse engineering the programming of other chips.  Be a contributor! :D
 
@@ -15,7 +15,7 @@ How to run/test/use
 * Note the
 http://sourceforge.net/apps/mediawiki/piklab/index.php?title=USB_Port_Problems[usb
 rights issue]..
-* Connect a PIC12LF1822 device to the programmer and type:
+* Connect a PIC12F1822 device to the programmer and type:
 ----
 cd test; ruby test_programming.rb blink.hex
 ----
