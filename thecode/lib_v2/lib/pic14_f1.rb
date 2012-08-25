@@ -461,15 +461,27 @@ module PICkit2
 		bunch << 254 << 127
 	      end
 	    end
-	    puts "write bunch "+bunch.inspect+" at "+bunchStart.to_s
 	    
 	    # position the program counter
 	    adjustProgramCounter(bunchStart)
 	    
 	    #send the data bunch
 	    send(
-	      clr_download_buffer,
-	      download_data(bunch),
+	      clr_download_buffer
+	    )
+
+	    # separate the send commands to avoid buffer overflow
+
+	    until bunch == []
+	    
+	      send(
+	        download_data(bunch.slice!(0,62))
+		# separate per 62 bytes of each data transfer
+	      )
+	    
+	    end
+
+	    send(
 	      execute_script(
 		write_bits_literal(:bits => 6, :literal => 2),
 		write_byte_buffer,
