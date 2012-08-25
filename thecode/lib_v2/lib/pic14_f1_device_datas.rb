@@ -1,7 +1,7 @@
 module PICkit2
   PIC14F1DeviceData = 
     {
-    :deviceName => "PIC12F1825",
+    :deviceName => "PIC16F1825",
     :deviceID => 0b100111011,
     :programMemory => (0..0x3fff),
     :dataMemory => (0x1e000..0x1e1ff),
