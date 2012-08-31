@@ -3,8 +3,14 @@ especially for programming the f1-series PIC MIcrocontrollers with
 http://www.microchip.com/pagehandler/en-us/family/8bit/architecture/enhancedmidrange.html[Enhanced
 Mid-Range Core] (eg. PIC12F1822) and possible more..._
 
-This software is in an early stage, but at this time it can program PIC12F1822
-and PIC16F1825 microcontrollers with any .hex file from command line.  It
+This software is in an early stage, but at this time it can program
+
+* PIC12F1822, PIC12LF1822
+* PIC16F1825
+* PIC12F1840
+* PIC16F1847
+
+microcontrollers with any .hex file from command line.  It
 contains also a big PICKit2 control framework written in ruby and usb-capture
 dissassembler toolkit for reverse engineering the programming of other chips.
 Be a contributor! :D
