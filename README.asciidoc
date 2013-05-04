@@ -1,12 +1,15 @@
 _PIC programmer framework for http://en.wikipedia.org/wiki/PICKit[PICKit2],
 especially for programming the f1-series PIC MIcrocontrollers with
 http://www.microchip.com/pagehandler/en-us/family/8bit/architecture/enhancedmidrange.html[Enhanced
-Mid-Range Core] (eg. PIC12F1822) and possible more..._
+Mid-Range Core] (eg. PIC12F1840) and possible more..._
 
 This software is in an early stage, but at this time it can program
 
+* PIC16F1455, PIC16LF1455 note: program at 3V only
+* PIC16F1459, PIC16LF1459 note: program at 3V only
 * PIC12F1822, PIC12LF1822
-* PIC16F1825
+* PIC16F1825, PIC16LF1825
+* PIC16F1829, PIC16LF1829
 * PIC12F1840
 * PIC16F1847
 
@@ -22,7 +25,7 @@ How to run/test/use
 * Note the
 http://sourceforge.net/apps/mediawiki/piklab/index.php?title=USB_Port_Problems[usb
 rights issue]..
-* Connect a PIC12F1822 device to the programmer and type:
+* Connect a PIC device to the programmer and type:
 ----
 cd test; ruby test_programming.rb blink.hex
 ----
@@ -30,7 +33,8 @@ There is a little example in the 'test' directory which writes a 'hello world'
 program into the chip. The only thing that the 'hello world' does is it
 switches the RA2 pin on. The other test file blinks the led connected to RA2,
 it is called blink.hex.
-(There is a test program for the 14-pin model PIC16F1825 too.)
+(This works on most chips, tested on PIC12F1822, there is a test program for 
+the 14-pin model PIC16F1825 too.)
 The command
 ----
 ruby on.rb

@@ -40,6 +40,83 @@ module PICkit2
     :configurationWord2 => 0x10010
   },
     {
+    :deviceName => "PIC16LF1825",
+    :deviceID => 0b101000011,
+    :programMemory => (0..0x3fff),
+    :dataMemory => (0x1e000..0x1e1ff),
+    :configurationMemory => (0x10000..0x103ff),
+    :rowSize => 32,
+    :numberOfLatches => 32,
+    :configurationWord1 => 0x1000e,
+    :configurationWord2 => 0x10010
+  },
+    {
+    :deviceName => "PIC12F1829",
+    :deviceID => 0b100111111,
+    :programMemory => (0..0x3fff),
+    :dataMemory => (0x1e000..0x1e1ff),
+    :configurationMemory => (0x10000..0x103ff),
+    :rowSize => 32,
+    :numberOfLatches => 32,
+    :configurationWord1 => 0x1000e,
+    :configurationWord2 => 0x10010
+  },
+    {
+    :deviceName => "PIC12LF1829",
+    :deviceID => 0b101000111,
+    :programMemory => (0..0x3fff),
+    :dataMemory => (0x1e000..0x1e1ff),
+    :configurationMemory => (0x10000..0x103ff),
+    :rowSize => 32,
+    :numberOfLatches => 32,
+    :configurationWord1 => 0x1000e,
+    :configurationWord2 => 0x10010
+  },
+    {
+    :deviceName => "PIC16F1455",
+    :deviceID => 0b0011000000100001,
+    :programMemory => (0..0x3fff),
+    :dataMemory => (0x1e000..0x1e1ff),
+    :configurationMemory => (0x10000..0x103ff),
+    :rowSize => 32,
+    :numberOfLatches => 8,
+    :configurationWord1 => 0x1000e,
+    :configurationWord2 => 0x10010
+  },
+    {
+    :deviceName => "PIC16LF1455",
+    :deviceID => 0b0011000000100101,
+    :programMemory => (0..0x3fff),
+    :dataMemory => (0x1e000..0x1e1ff),
+    :configurationMemory => (0x10000..0x103ff),
+    :rowSize => 32,
+    :numberOfLatches => 8,
+    :configurationWord1 => 0x1000e,
+    :configurationWord2 => 0x10010
+  },
+    {
+    :deviceName => "PIC16F1459",
+    :deviceID => 0b0011000000100011,
+    :programMemory => (0..0x3fff),
+    :dataMemory => (0x1e000..0x1e1ff),
+    :configurationMemory => (0x10000..0x103ff),
+    :rowSize => 32,
+    :numberOfLatches => 8,
+    :configurationWord1 => 0x1000e,
+    :configurationWord2 => 0x10010
+  },
+    {
+    :deviceName => "PIC16LF1459",
+    :deviceID => 0b0011000000100111,
+    :programMemory => (0..0x3fff),
+    :dataMemory => (0x1e000..0x1e1ff),
+    :configurationMemory => (0x10000..0x103ff),
+    :rowSize => 32,
+    :numberOfLatches => 8,
+    :configurationWord1 => 0x1000e,
+    :configurationWord2 => 0x10010
+  },
+    {
     :deviceName => "PIC12F1938",
     :deviceID => 0b100011101,
     :programMemory => (0..0x7fff),
