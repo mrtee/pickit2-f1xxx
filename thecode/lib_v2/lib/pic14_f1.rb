@@ -34,7 +34,7 @@ module PICkit2
 	    set_icsp_pins(:pgd =>0, :pgc => 0),
 	    mclr_gnd_on
 	  ),
-	  v && setvdd(3.3),
+	  v && setvdd(3),
 	  v && execute_script(
 	    vdd_gnd_off,
 	    vdd_on,
@@ -57,7 +57,7 @@ module PICkit2
 	else 
 	  #vppfirst
 	  send(
-	    setvdd(3.3),
+	    setvdd(3),
 	    setvpp(8.5),
 	    clr_upload_buffer,
 	    execute_script(
