@@ -507,36 +507,38 @@ module PICkit2
 	
 	
       # data memory
-      # detect if data memory is to be programmed at all
-      if @dataBuffer.index {|x| @deviceData[:dataMemory] === x[0]} then
-	
-	# erase data memory
-	send(
-	  execute_script(
-	    write_bits_literal(0xb),
-	    delay_long(5)
-	  )
-	)
-
-	# adjust program counter to start position
-	@programCounter = @deviceData[:dataMemory].begin
-
-	#select each address/data pair and write them to the data memory
-        @dataBuffer.select {|x| @deviceData[:dataMemory] === x[0]}.each do |addressDataPair|
+      # detect if particular chip has data memory
+      if @deviceData[:dataMemory] then
+        # detect if data memory is to be programmed at all
+	if @dataBuffer.index {|x| @deviceData[:dataMemory] === x[0]} then
 	  
-	  adjustProgramCounter(addressDataPair[0])
-
-	  # write to memory
+	  # erase data memory
 	  send(
 	    execute_script(
-	      write_bits_literal(3),
-	      write_byte_literal((addressDataPair[1] << 1) & 255),
-              write_byte_literal((addressDataPair[1] << 1) >> 8),
-	      write_bits_literal(8),
+	      write_bits_literal(0xb),
 	      delay_long(5)
 	    )
 	  )
 
+	  # adjust program counter to start position
+	  @programCounter = @deviceData[:dataMemory].begin
+
+	  #select each address/data pair and write them to the data memory
+	  @dataBuffer.select {|x| @deviceData[:dataMemory] === x[0]}.each do |addressDataPair|
+	    
+	    adjustProgramCounter(addressDataPair[0])
+
+	    # write to memory
+	    send(
+	      execute_script(
+		write_bits_literal(3),
+		write_byte_literal((addressDataPair[1] << 1) & 255),
+		write_byte_literal((addressDataPair[1] << 1) >> 8),
+		write_bits_literal(8),
+		delay_long(5)
+	      )
+	    )
+	  end
 	end
       end
 
