@@ -58,4 +58,4 @@ License
 ------- 
 This project is distributed under http://www.gnu.org/licenses/gpl.html[GPLv3] 
 
-(C) 2012 MRTEE.GITHUB.COM
+(C) 2013 MRTEE.GITHUB.COM
