@@ -44,6 +44,10 @@ switches the device power on,
 ruby off.rb
 ----
 switches the power off. Voltage is 3.3V
+----
+ruby onoff.rb
+----
+switches the power on (3V) and waits 10 minutes for the red button to be pressed. then switches the power off.
 
 You can replace the example hex file with any other
 one.  http://gputils.sourceforge.net/[Gputils] can compile assembly source for
