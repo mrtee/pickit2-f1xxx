@@ -22,9 +22,7 @@ How to run/test/use
 -------------------
 * http://www.ruby-lang.org/en/downloads/[Install Ruby.]
 * https://github.com/larskanis/libusb[Install libusb gem.]
-* Note the
-http://sourceforge.net/apps/mediawiki/piklab/index.php?title=USB_Port_Problems[usb
-rights issue]..
+* Note the link:usb_rights_issue.asciidoc[usb rights issue]..
 * Connect a PIC device to the programmer and type:
 ----
 cd test; ruby test_programming.rb blink.hex
