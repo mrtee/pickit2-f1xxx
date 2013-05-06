@@ -1,5 +1,5 @@
 The USB Rights Issue
-====================
+--------------------
 
 To avoid USB access/permission problems create the file named /etc/udev/rules.d/50-pickit2 with the following content:
 ----
