@@ -1,16 +1,13 @@
 The USB Rights Issue
 ====================
-To avoid USB access/permission problems create the file named /etc/udev/rules.d/50-pickit2 with the following content:
 
+To avoid USB access/permission problems create the file named /etc/udev/rules.d/50-pickit2 with the following content:
 ----
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="0033", GROUP="microchip", MODE="0660"
 ----
-
 Also you should add your user to the "microchip" group to make this all work, so type:
-
 ----
 sudo addgroup microchip # (for Arch and Gentoo Linux, it is "groupadd")
 sudo gpasswd -a your_user_name microchip
 ----
-
 Relogin and everything will be OK.
