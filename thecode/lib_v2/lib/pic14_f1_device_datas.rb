@@ -135,6 +135,28 @@ module PICkit2
     :configurationWord2 => 0x10010
   },
     {
+    :deviceName => "PIC12F1827",
+    :deviceID => 0b100111101,
+    :programMemory => (0..0xfff),
+    :dataMemory => (0x1e000..0x1e1ff),
+    :configurationMemory => (0x10000..0x103ff),
+    :rowSize => 32,
+    :numberOfLatches => 8,
+    :configurationWord1 => 0x1000e,
+    :configurationWord2 => 0x10010
+  },
+    {
+    :deviceName => "PIC12LF1827",
+    :deviceID => 0b101000101,
+    :programMemory => (0..0xfff),
+    :dataMemory => (0x1e000..0x1e1ff),
+    :configurationMemory => (0x10000..0x103ff),
+    :rowSize => 32,
+    :numberOfLatches => 8,
+    :configurationWord1 => 0x1000e,
+    :configurationWord2 => 0x10010
+  },
+    {
     :deviceName => "PIC12F1822",
     :deviceID => 0b100111000,
     :programMemory => (0..0xfff),
