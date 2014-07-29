@@ -18,6 +18,17 @@ module PICkit2
     :configurationWord2 => 0x10010
   },
     {
+    :deviceName => "PIC12LF1840",
+    :deviceID => 0b011011110,
+    :programMemory => (0..0x1fff),
+    :dataMemory => (0x1e000..0x1e1ff),
+    :configurationMemory => (0x10000..0x103ff),
+    :rowSize => 32,
+    :numberOfLatches => 32,
+    :configurationWord1 => 0x1000e,
+    :configurationWord2 => 0x10010
+  },
+    {
     :deviceName => "PIC16F1847",
     :deviceID => 0b010100100,
     :programMemory => (0..0x3fff),
