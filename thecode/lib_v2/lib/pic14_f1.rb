@@ -53,9 +53,25 @@ module PICkit2
       when "HVP"
 	if @vddWas > 1.5 then
 	  #vddfirst
-	  puts "Vdd-First fixit!"
+	  puts "ENTER Vdd-First"
+	  send(
+	    setvpp(8.5),
+	    clr_upload_buffer,
+	    execute_script(
+	      vpp_off,
+	      vpp_pwm_on,
+	      mclr_gnd_on,
+	      set_icsp_speed(0),
+	      set_icsp_pins(:pgd =>0, :pgc => 0),
+	      delay_long(110),
+	      vpp_on,
+	      mclr_gnd_off,
+	      delay_long(110)  #!!! very important
+	    )
+	  )
 	else 
 	  #vppfirst
+	  puts "ENTER Vpp-First"
 	  send(
 	    setvdd(3),
 	    setvpp(8.5),
@@ -95,22 +111,36 @@ module PICkit2
 
       when "HVP"
 	if @vddWas > 1.5 then
-	  puts "Vdd-First fixit!"
+	  #Vdd-First
+	  puts "EXIT Vdd remains"
+	  send(
+	    execute_script(
+	      mclr_gnd_on,
+	      vpp_off,
+	      vpp_pwm_off,
+	      set_icsp_pins,
+	      mclr_gnd_off
+	    )
+	  )
+
 	else
 	  #Vpp-First
+	  puts "EXIT Vpp-last"
 	  send(
 
 	    execute_script(
 	      vdd_off,
 	      vdd_gnd_on,
+	      delay_long(50), # capacitor discharge time
 	      vpp_off,
+	      set_icsp_pins,
 	      mclr_gnd_off,
 	      vpp_pwm_off
 	    )
 	  )
 	end
       end
-      send(execute_script(set_icsp_pins, busy_led_off))
+      send(execute_script(busy_led_off))
     end
 
     # Read PIC mcu Device ID (4-bit revision not included)
