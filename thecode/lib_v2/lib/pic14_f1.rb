@@ -25,35 +25,57 @@ module PICkit2
       readVoltages
       case mode
       when "LVP"
-	v = @vddWas < 1.5 # slef-powered?
-	send(
-	  execute_script(
-	    vpp_off,
-	    vpp_pwm_off,
-	    set_icsp_speed(0),
-	    set_icsp_pins(:pgd =>0, :pgc => 0),
-	    mclr_gnd_on
-	  ),
-	  v && setvdd(3),
-	  v && execute_script(
-	    vdd_gnd_off,
-	    vdd_on,
-	    delay_long(50) # capacitor charging delay
-	    ),
-	  execute_script(
-	    delay_short(250),
-	    write_byte_literal("P".ord),
-	    write_byte_literal("H".ord),
-	    write_byte_literal("C".ord),
-	    write_byte_literal("M".ord),
-	    write_bits_literal(:bits => 1, :literal => 0)
+	if @vddWas > 1.5 then # slef-powered?
+	  #Vdd-First
+	  puts "ENTER Vdd-First - self powered"
+	  send(
+	    clr_upload_buffer,
+	    execute_script(
+	      vpp_off,
+	      vpp_pwm_off,
+	      set_icsp_speed(0),
+	      mclr_gnd_on,
+	      set_icsp_pins(:pgd =>0, :pgc => 0),
+	      delay_short(250),
+	      write_byte_literal("P".ord),
+	      write_byte_literal("H".ord),
+	      write_byte_literal("C".ord),
+	      write_byte_literal("M".ord),
+	      write_bits_literal(:bits => 1, :literal => 0)
+	    )
 	  )
-	)
+	else
+	  #Vpp-First
+	  puts "ENTER Vpp-First"
+	  send(
+	    clr_upload_buffer,
+	    setvdd(3),
+	    execute_script(
+	      vdd_off,
+	      vpp_pwm_off,
+	      vpp_off,
+	      vdd_gnd_off,
+	      set_icsp_speed(0),
+	      set_icsp_pins(:pgd =>0, :pgc => 0),
+	      mclr_gnd_on,
+	      vdd_on,
+	      delay_long(50), # capacitor charging delay
+	      delay_short(250),
+	      write_byte_literal("P".ord),
+	      write_byte_literal("H".ord),
+	      write_byte_literal("C".ord),
+	      write_byte_literal("M".ord),
+	      write_bits_literal(:bits => 1, :literal => 0)
+	    )
+	  )
+	end
+
+      
       
       when "HVP"
 	if @vddWas > 1.5 then
 	  #vddfirst
-	  puts "ENTER Vdd-First"
+	  puts "ENTER Vdd-First - self powered"
 	  send(
 	    setvpp(8.5),
 	    clr_upload_buffer,
@@ -98,21 +120,35 @@ module PICkit2
     def exitPVMode
       case @modeWas
       when "LVP"
-	v = @vddWas < 1.5
-	send(
-	  execute_script(
-	    v && vdd_off,
-	    v && vdd_gnd_on,
-	    v && delay_long(50), # capacitor discharge time
-	    v && vdd_gnd_off,
-	    mclr_gnd_off
+	if @vddWas > 1.5 then
+	  #Vdd-First
+	  puts "EXIT Vdd-First - self powered"
+	  send(
+	    execute_script(
+	      set_icsp_pins,
+	      mclr_gnd_off
+	    )
 	  )
-	)
+	else
+	  #Vpp-First
+	  puts "EXIT Vpp-First"
+	  send(
+	    execute_script(
+	      vdd_off,
+	      vdd_gnd_on,
+	      delay_long(50), # capacitor discharge time
+	      vdd_gnd_off,
+	      mclr_gnd_off,
+	      set_icsp_pins
+	    )
+	  )
+	end
+
 
       when "HVP"
 	if @vddWas > 1.5 then
 	  #Vdd-First
-	  puts "EXIT Vdd remains"
+	  puts "EXIT Vdd-First - self powered"
 	  send(
 	    execute_script(
 	      mclr_gnd_on,
