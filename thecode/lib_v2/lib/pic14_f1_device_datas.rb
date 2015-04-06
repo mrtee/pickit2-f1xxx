@@ -62,7 +62,7 @@ module PICkit2
     :configurationWord2 => 0x10010
   },
     {
-    :deviceName => "PIC12F1829",
+    :deviceName => "PIC16F1829",
     :deviceID => 0b100111111,
     :programMemory => (0..0x3fff),
     :dataMemory => (0x1e000..0x1e1ff),
@@ -73,7 +73,7 @@ module PICkit2
     :configurationWord2 => 0x10010
   },
     {
-    :deviceName => "PIC12LF1829",
+    :deviceName => "PIC16LF1829",
     :deviceID => 0b101000111,
     :programMemory => (0..0x3fff),
     :dataMemory => (0x1e000..0x1e1ff),
@@ -124,7 +124,7 @@ module PICkit2
     :configurationWord2 => 0x10010
   },
     {
-    :deviceName => "PIC12F1938",
+    :deviceName => "PIC16F1938",
     :deviceID => 0b100011101,
     :programMemory => (0..0x7fff),
     :dataMemory => (0x1e000..0x1e1ff),
@@ -135,7 +135,7 @@ module PICkit2
     :configurationWord2 => 0x10010
   },
     {
-    :deviceName => "PIC12LF1938",
+    :deviceName => "PIC16LF1938",
     :deviceID => 0b100100101,
     :programMemory => (0..0x7fff),
     :dataMemory => (0x1e000..0x1e1ff),
@@ -157,7 +157,7 @@ module PICkit2
     :configurationWord2 => 0x10010
   },
     {
-    :deviceName => "PIC12F1827",
+    :deviceName => "PIC16F1827",
     :deviceID => 0b100111101,
     :programMemory => (0..0xfff),
     :dataMemory => (0x1e000..0x1e1ff),
@@ -168,7 +168,7 @@ module PICkit2
     :configurationWord2 => 0x10010
   },
     {
-    :deviceName => "PIC12LF1827",
+    :deviceName => "PIC16LF1827",
     :deviceID => 0b101000101,
     :programMemory => (0..0xfff),
     :dataMemory => (0x1e000..0x1e1ff),
