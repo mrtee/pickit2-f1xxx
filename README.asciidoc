@@ -5,13 +5,24 @@ Mid-Range Core] (eg. PIC12F1840) and possible more..._
 
 This software is in an early stage, but at this time it can program
 
-* PIC16F1455, PIC16LF1455 note: program at 3V only
-* PIC16F1459, PIC16LF1459 note: program at 3V only
-* PIC12F1822, PIC12LF1822
-* PIC16F1825, PIC16LF1825
-* PIC16F1829, PIC16LF1829
-* PIC12F1840
-* PIC16F1847
+PIC12F1840
+PIC12LF1840
+PIC16F1847
+PIC16F1825
+PIC16LF1825
+PIC12F1829
+PIC12LF1829
+PIC16F1455
+PIC16LF1455
+PIC16F1459
+PIC16LF1459
+PIC12F1938
+PIC12LF1938
+PIC16F1947
+PIC12F1827
+PIC12LF1827
+PIC12F1822
+PIC12LF1822
 
 microcontrollers with any .hex file from command line.  It
 contains also a big PICKit2 control framework written in ruby and usb-capture
