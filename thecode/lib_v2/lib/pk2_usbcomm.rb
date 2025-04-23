@@ -55,7 +55,7 @@ module PICkit2
       else
 	block = block.flatten.select {|q| q.kind_of?(Numeric)}.pack("C*")
       end
-      @mic.bulk_transfer(:endpoint => 1, :dataOut => block+"\xad"*(64-block.length))
+      @mic.bulk_transfer(:endpoint => 1, :dataOut => block+"\xad".b*(64-block.length))
     end
 
     # Receives 64 byte string block from the device
