@@ -35,8 +35,8 @@ module PICkit2
     # PGC and PGD both are inputs
     def set_icsp_pins(a={})
       states = 3
-      states = states ^ (1+a[:pgc]*4) if a[:pgc].class == Fixnum
-      states = states ^ (2+a[:pgd]*8) if a[:pgd].class == Fixnum
+      states = states ^ (1+a[:pgc]*4) if a[:pgc].class == Integer
+      states = states ^ (2+a[:pgd]*8) if a[:pgd].class == Integer
       return [0xF3, states]
     end
 
@@ -50,13 +50,13 @@ module PICkit2
     
     # Hash argument: :bits and :literal
     # or
-    # one Fixnum argument for a literal.
+    # one Integer argument for a literal.
     # Example:
     #   write_bits_literal(:bits => 6, :literal => 4)
     # is the same as:
     #   write_bits_literal(4)
     def write_bits_literal(arg)
-      if arg.class == Fixnum then
+      if arg.class == Integer then
 	arg = {:bits => 6, :literal => arg}
       end
       return [0xEE, arg[:bits], arg[:literal]]
