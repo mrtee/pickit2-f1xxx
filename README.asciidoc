@@ -58,6 +58,55 @@ ruby onoff.rb
 ----
 switches the power on (3V) and waits 10 minutes for the red button to be pressed. then switches the power off.
 
+Graphical user interface
+------------------------
+A small Tk GUI is included in `test/pk2_gui.rb`. It provides a hex file picker,
+programming with automatic verification, standalone verification, device ID
+readout, target power control, and a log pane. The last hex file selected with
+the Browse button is remembered in
+`$XDG_CONFIG_HOME/pickit2-f1xxx/last_hex` (usually
+`~/.config/pickit2-f1xxx/last_hex`).
+
+Ruby/Tk is no longer part of the Ruby standard library. On Debian 
+ and Ubuntu systems without a `ruby-tk` package, install the Tcl/Tk
+headers and build the `tk` gem:
+
+----
+sudo apt install build-essential tcl8.6-dev tk8.6-dev
+gem install --user-install tk -- \
+  --with-tcltkversion=8.6 \
+  --with-tcl-lib=/usr/lib/x86_64-linux-gnu \
+  --with-tk-lib=/usr/lib/x86_64-linux-gnu \
+  --with-tcl-include=/usr/include/tcl8.6 \
+  --with-tk-include=/usr/include/tcl8.6 \
+  --enable-pthread
+----
+
+On distributions that still provide a `ruby-tk` package, installing that
+package is enough.
+
+Start the GUI with:
+
+----
+cd test
+ruby pk2_gui.rb
+----
+
+An optional hex file can be passed on the command line:
+
+----
+ruby pk2_gui.rb blink.hex
+----
+
+Verification reads back and compares all program and configuration words
+present in the hex file. Data EEPROM contents are currently not verified.
+A command-line readback and verification helper is also available:
+
+----
+cd test
+ruby readback_and_compare.rb blink.hex
+----
+
 You can replace the example hex file with any other
 one.  http://gputils.sourceforge.net/[Gputils] can compile assembly source for
 that f1-series chips.  Feature for other chips can be also implemented. Check
