@@ -35,7 +35,7 @@ pk.exitPVMode
 
 =end
 
-pk.readHexFile("helloworld.hex")
+pk.readHexFile(ARGV.shift || "helloworld.hex")
 
 pk.enterPVMode("HVP")
 
